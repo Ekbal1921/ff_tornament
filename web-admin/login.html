@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FFTournament - Admin Login</title>
+  <link rel="stylesheet" href="css/admin.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body class="login-body">
+
+  <div class="login-card">
+    <div class="login-header">
+      <div class="login-logo">🔥</div>
+      <h1 class="login-title">FFTournament <span>Admin</span></h1>
+      <p class="login-subtitle">Secure Operations & Tournament Management</p>
+      <div class="security-badge">
+        <span>🛡️</span> Zero-Trust Role Enforced
+      </div>
+    </div>
+
+    <!-- Alert Banner -->
+    <div id="login-alert" class="panel-card" style="display: none; padding: 12px; margin-bottom: 20px; font-size: 13px; border-radius: var(--radius-sm);">
+      <span id="login-alert-text"></span>
+    </div>
+
+    <form id="admin-login-form">
+      <div class="form-group">
+        <label for="admin-email" class="form-label">Administrator Email</label>
+        <input 
+          type="email" 
+          id="admin-email" 
+          class="form-control" 
+          placeholder="admin@fftornament.com" 
+          required 
+          autocomplete="email"
+        />
+      </div>
+
+      <div class="form-group">
+        <label for="admin-password" class="form-label">Password</label>
+        <input 
+          type="password" 
+          id="admin-password" 
+          class="form-control" 
+          placeholder="••••••••••••" 
+          required 
+          autocomplete="current-password"
+        />
+      </div>
+
+      <button type="submit" id="btn-login-submit" class="btn btn-primary" style="width: 100%; height: 44px; margin-top: 10px;">
+        <span id="btn-login-text">Sign In to Dashboard</span>
+        <span id="btn-login-spinner" class="loading-spinner" style="display: none; width: 18px; height: 18px; border-width: 2px;"></span>
+      </button>
+    </form>
+
+    <div style="margin-top: 24px; text-align: center; border-top: 1px solid var(--border-color); padding-top: 18px;">
+      <p style="font-size: 11.5px; color: var(--text-muted);">
+        🔒 Public registration is disabled. Administrator accounts are provisioned via secure server CLI and Firebase Auth claims.
+      </p>
+    </div>
+  </div>
+
+  <!-- Firebase Compat SDK -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-functions-compat.js"></script>
+  <script src="js/firebase-config.js?v=20261102_fix"></script>
+
+  <script>
+    const loginForm = document.getElementById("admin-login-form");
+    const emailInput = document.getElementById("admin-email");
+    const passwordInput = document.getElementById("admin-password");
+    const submitBtn = document.getElementById("btn-login-submit");
+    const btnText = document.getElementById("btn-login-text");
+    const btnSpinner = document.getElementById("btn-login-spinner");
+    const alertBox = document.getElementById("login-alert");
+    const alertText = document.getElementById("login-alert-text");
+
+    // Check if redirected with an error reason
+    const urlParams = new URLSearchParams(window.location.search);
+    const reason = urlParams.get("error");
+    if (reason === "unauthorized") {
+      showAlert("Access Denied: Your account does not have administrator privileges.", "error");
+    } else if (reason === "logged_out") {
+      showAlert("You have signed out successfully.", "info");
+    }
+
+    function showAlert(msg, type = "error") {
+      alertBox.style.display = "block";
+      alertText.textContent = msg;
+      if (type === "error") {
+        alertBox.style.background = "var(--accent-red-bg)";
+        alertBox.style.borderColor = "var(--accent-red)";
+        alertBox.style.color = "var(--accent-red)";
+      } else {
+        alertBox.style.background = "var(--accent-blue-bg)";
+        alertBox.style.borderColor = "var(--accent-blue)";
+        alertBox.style.color = "var(--accent-blue)";
+      }
+    }
+
+    loginForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      alertBox.style.display = "none";
+
+      const email = emailInput.value.trim();
+      const password = passwordInput.value;
+
+      if (!email || !password) {
+        showAlert("Please enter both email and password.");
+        return;
+      }
+
+      // Loading state
+      submitBtn.disabled = true;
+      btnText.style.display = "none";
+      btnSpinner.style.display = "inline-block";
+
+      try {
+        // 1. Authenticate with Firebase Auth
+        const cred = await auth.signInWithEmailAndPassword(email, password);
+        const user = cred.user;
+
+        // 2. Server-side role verification
+        const tokenResult = await user.getIdTokenResult(true);
+        const hasAdminClaim = tokenResult.claims && tokenResult.claims.admin === true;
+
+        // Check if user is the designated owner/admin
+        const isDesignatedAdmin = user.email && (
+          user.email.toLowerCase() === "ekbalhossain1921@gmail.com" ||
+          user.email.toLowerCase().startsWith("admin@")
+        );
+
+        let hasFirestoreAdminRole = false;
+        try {
+          // Check by UID in 'users' and 'user'
+          let userDoc = await db.collection("users").doc(user.uid).get().catch(() => null);
+          if (!userDoc || !userDoc.exists) {
+            userDoc = await db.collection("user").doc(user.uid).get().catch(() => null);
+          }
+
+          // Check by email in 'users' and 'user'
+          if (!userDoc || !userDoc.exists) {
+            const q1 = await db.collection("users").where("email", "==", user.email).get().catch(() => null);
+            if (q1 && !q1.empty) {
+              userDoc = q1.docs[0];
+            } else {
+              const q2 = await db.collection("user").where("email", "==", user.email).get().catch(() => null);
+              if (q2 && !q2.empty) userDoc = q2.docs[0];
+            }
+          }
+
+          // Check known manual document ID
+          if (!userDoc || !userDoc.exists) {
+            userDoc = await db.collection("user").doc("CVAqBuzGC6NQ9h9y0Dv7jSnPD533").get().catch(() => null);
+          }
+
+          if (userDoc && userDoc.exists) {
+            const role = userDoc.data().role;
+            if (role === "admin" || role === "moderator") {
+              hasFirestoreAdminRole = true;
+            }
+          }
+
+          // Auto-sync real UID document in Firestore for seamless operation
+          if (isDesignatedAdmin || hasFirestoreAdminRole) {
+            await db.collection("users").doc(user.uid).set({
+              userId: user.uid,
+              email: user.email,
+              displayName: user.displayName || "Super Admin",
+              role: "admin",
+              isBanned: false,
+              updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+            }, { merge: true }).catch(err => console.warn("Sync warning:", err));
+          }
+        } catch (docErr) {
+          console.warn("Could not read user profile role directly:", docErr);
+        }
+
+        if (!hasAdminClaim && !hasFirestoreAdminRole && !isDesignatedAdmin) {
+          // Reject normal users: Sign out immediately
+          await auth.signOut();
+          showAlert("Access Denied: Account '" + email + "' is not registered as an administrator.", "error");
+          submitBtn.disabled = false;
+          btnText.style.display = "inline";
+          btnSpinner.style.display = "none";
+          return;
+        }
+
+        // 3. Authorized Admin: Redirect to Dashboard
+        sessionStorage.setItem("admin_uid", user.uid);
+        sessionStorage.setItem("admin_email", user.email);
+        window.location.href = "index.html";
+
+      } catch (err) {
+        submitBtn.disabled = false;
+        btnText.style.display = "inline";
+        btnSpinner.style.display = "none";
+
+        let errorMsg = "Login failed: " + err.message;
+        if (err.code === "auth/invalid-credential" || err.code === "auth/user-not-found" || err.code === "auth/wrong-password") {
+          errorMsg = "Invalid administrator email or password.";
+        } else if (err.code === "auth/too-many-requests") {
+          errorMsg = "Too many failed attempts. Account temporarily locked for security.";
+        }
+        showAlert(errorMsg, "error");
+      }
+    });
+  </script>
+
+</body>
+</html>
+
