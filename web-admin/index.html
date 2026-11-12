@@ -1,0 +1,2252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FFTournament - Administrator Dashboard</title>
+  <link rel="stylesheet" href="css/admin.css?v=20261110_responsive">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script>
+    (function() {
+      const savedTheme = localStorage.getItem('fft_admin_theme') || 'dark';
+      document.documentElement.setAttribute('data-theme', savedTheme);
+    })();
+  </script>
+</head>
+<body>
+
+  <div class="admin-layout">
+    
+    <!-- ======================================================================
+         SIDEBAR
+         ====================================================================== -->
+    <aside id="admin-sidebar" class="sidebar">
+      <div class="sidebar-header">
+        <div class="brand-icon">🔥</div>
+        <div>
+          <div class="brand-text">FFTournament <span>Admin</span></div>
+          <span class="brand-tag">CONTROL PANEL</span>
+        </div>
+      </div>
+
+      <nav class="sidebar-nav">
+        <div class="nav-section-title">Core Operations</div>
+        <a class="nav-item active" data-view="dashboard">
+          <span class="nav-icon">📊</span>
+          <span>Dashboard</span>
+        </a>
+        <a class="nav-item" data-view="tournaments">
+          <span class="nav-icon">🏆</span>
+          <span>Tournaments</span>
+        </a>
+        <a class="nav-item" data-view="players">
+          <span class="nav-icon">👥</span>
+          <span>Registered Players</span>
+        </a>
+        <a class="nav-item" data-view="room">
+          <span class="nav-icon">🔑</span>
+          <span>Match Room Manager</span>
+        </a>
+        <a class="nav-item" data-view="results">
+          <span class="nav-icon">🎯</span>
+          <span>Match Results & Payouts</span>
+        </a>
+
+        <div class="nav-section-title">Finance & Wallets</div>
+        <a class="nav-item" data-view="deposits">
+          <span class="nav-icon">💳</span>
+          <span>Deposit Requests</span>
+          <span id="badge-pending-deposits" class="nav-badge" style="display: none;">0</span>
+        </a>
+        <a class="nav-item" data-view="withdrawals">
+          <span class="nav-icon">💸</span>
+          <span>Withdrawal Requests</span>
+          <span id="badge-pending-withdrawals" class="nav-badge" style="display: none;">0</span>
+        </a>
+        <a class="nav-item" data-view="transactions">
+          <span class="nav-icon">📜</span>
+          <span>All Transactions</span>
+        </a>
+
+        <div class="nav-section-title">Moderation & Security</div>
+        <a class="nav-item" data-view="users">
+          <span class="nav-icon">👤</span>
+          <span>User Accounts</span>
+        </a>
+        <a class="nav-item" data-view="disputes">
+          <span class="nav-icon">🛡️</span>
+          <span>Disputes & Reports</span>
+          <span id="badge-pending-disputes" class="nav-badge" style="display: none;">0</span>
+        </a>
+        <a class="nav-item" data-view="audit">
+          <span class="nav-icon">📋</span>
+          <span>Audit Logs</span>
+        </a>
+
+        <div class="nav-section-title">System &amp; Releases</div>
+        <a class="nav-item" data-view="app-updates">
+          <span class="nav-icon">🚀</span>
+          <span>App Updates</span>
+        </a>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="admin-mini-profile">
+          <div id="admin-avatar-initials" class="admin-avatar">A</div>
+          <div class="admin-info">
+            <div id="admin-display-email" class="admin-name">Admin</div>
+            <div id="admin-display-role" class="admin-role">Super Admin</div>
+          </div>
+        </div>
+        <button id="btn-logout" class="btn-logout" title="Sign Out">Sign Out</button>
+      </div>
+    </aside>
+
+    <!-- Mobile Sidebar Backdrop Overlay -->
+    <div id="sidebar-backdrop" class="sidebar-backdrop"></div>
+
+    <!-- ======================================================================
+         MAIN CONTENT WRAPPER
+         ====================================================================== -->
+    <div class="main-wrapper">
+      
+      <!-- Top Sticky Header -->
+      <header class="top-header">
+        <div class="header-left">
+          <button id="menu-toggle-btn" class="menu-toggle">☰</button>
+          <h2 id="page-header-title" class="page-title">Dashboard Overview</h2>
+        </div>
+        <div class="header-right">
+          <button id="theme-toggle-btn" class="theme-toggle-btn" title="Toggle Light / Dark Mode" aria-label="Toggle Light / Dark Mode">
+            <span id="theme-toggle-icon" class="theme-toggle-icon">☀️</span>
+            <span id="theme-toggle-label" class="theme-toggle-label">Light Mode</span>
+          </button>
+          <div id="header-clock" class="header-time">UTC Clock</div>
+          <div class="security-badge" style="margin-top: 0;">
+            <span>🔒</span> Zero-Trust Enforced
+          </div>
+        </div>
+      </header>
+
+      <!-- Dynamic Views Container -->
+      <main class="content-container">
+
+        <!-- 1. DASHBOARD VIEW -->
+        <section id="view-dashboard" class="view-section active">
+          <div class="stats-grid">
+            <div class="stat-card">
+              <div>
+                <div class="stat-label">Total Users</div>
+                <div id="stat-total-users" class="stat-value">0</div>
+                <div class="stat-sub">Registered accounts</div>
+              </div>
+              <div class="stat-icon blue">👥</div>
+            </div>
+
+            <div class="stat-card">
+              <div>
+                <div class="stat-label">Active Tournaments</div>
+                <div id="stat-active-tournaments" class="stat-value">0</div>
+                <div class="stat-sub">Open / Live matches</div>
+              </div>
+              <div class="stat-icon orange">🏆</div>
+            </div>
+
+            <div class="stat-card">
+              <div>
+                <div class="stat-label">Completed Matches</div>
+                <div id="stat-completed-tournaments" class="stat-value">0</div>
+                <div class="stat-sub">Evaluated & paid</div>
+              </div>
+              <div class="stat-icon green">🎯</div>
+            </div>
+
+            <div class="stat-card">
+              <div>
+                <div class="stat-label">Total Prize Pool</div>
+                <div id="stat-total-prizepool" class="stat-value">৳ 0</div>
+                <div class="stat-sub">Tournament prizes</div>
+              </div>
+              <div class="stat-icon gold">💰</div>
+            </div>
+
+            <div class="stat-card">
+              <div>
+                <div class="stat-label">Pending Deposits</div>
+                <div id="stat-pending-deposits" class="stat-value">0</div>
+                <div class="stat-sub">Awaiting verification</div>
+              </div>
+              <div class="stat-icon green">💳</div>
+            </div>
+
+            <div class="stat-card">
+              <div>
+                <div class="stat-label">Pending Withdrawals</div>
+                <div id="stat-pending-withdrawals" class="stat-value">0</div>
+                <div class="stat-sub">Awaiting payout</div>
+              </div>
+              <div class="stat-icon red">💸</div>
+            </div>
+
+            <div class="stat-card">
+              <div>
+                <div class="stat-label">Unresolved Disputes</div>
+                <div id="stat-pending-disputes" class="stat-value">0</div>
+                <div class="stat-sub">Lobby & player reports</div>
+              </div>
+              <div class="stat-icon red">🛡️</div>
+            </div>
+          </div>
+
+          <!-- Recent Tournaments Panel -->
+          <div class="panel-card">
+            <div class="panel-header">
+              <div class="panel-title">🏆 Recent Tournaments</div>
+              <button class="btn btn-primary btn-sm" onclick="openModal('modal-create-tournament')">+ New Tournament</button>
+            </div>
+            <div class="panel-body" style="padding: 0;">
+              <div class="table-responsive">
+                <table class="data-table">
+                  <thead>
+                    <tr>
+                      <th>Title</th>
+                      <th>Mode</th>
+                      <th>Slots Filled</th>
+                      <th>Prize Pool</th>
+                      <th>Status</th>
+                      <th>Action</th>
+                    </tr>
+                  </thead>
+                  <tbody id="recent-tournaments-tbody">
+                    <tr><td colspan="6" class="loading-container"><div class="loading-spinner"></div>Loading...</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- 2. TOURNAMENTS VIEW -->
+        <section id="view-tournaments" class="view-section">
+          <div class="panel-card">
+            <div class="panel-header">
+              <div class="panel-title">🏆 Tournament Management</div>
+              <div class="panel-actions">
+                <input type="text" id="tourn-search-input" class="search-input" placeholder="Search by title..." oninput="filterTournaments()">
+                <select id="tourn-status-filter" class="form-control" style="width: auto; padding: 7px 12px;" onchange="filterTournaments()">
+                  <option value="ALL">All Statuses</option>
+                  <option value="Registration Open">Registration Open</option>
+                  <option value="Upcoming">Upcoming</option>
+                  <option value="Live">Live</option>
+                  <option value="Full">Full</option>
+                  <option value="Completed">Completed</option>
+                  <option value="Cancelled">Cancelled</option>
+                </select>
+                <select id="tourn-mode-filter" class="form-control" style="width: auto; padding: 7px 12px;" onchange="filterTournaments()">
+                  <option value="ALL">All Modes</option>
+                  <option value="Solo">Solo</option>
+                  <option value="Duo">Duo</option>
+                  <option value="Squad">Squad</option>
+                </select>
+                <button class="btn btn-primary" onclick="openModal('modal-create-tournament')">+ Create Tournament</button>
+              </div>
+            </div>
+            <div class="panel-body" style="padding: 0;">
+              <div class="table-responsive">
+                <table class="data-table">
+                  <thead>
+                    <tr>
+                      <th>Tournament</th>
+                      <th>Mode</th>
+                      <th>Map</th>
+                      <th>Slots</th>
+                      <th>Prize & Fee</th>
+                      <th>Schedule</th>
+                      <th>Status</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody id="tournaments-tbody">
+                    <tr><td colspan="8" class="loading-container"><div class="loading-spinner"></div>Loading...</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- 3. PLAYERS ROSTER VIEW -->
+        <section id="view-players" class="view-section">
+          <div class="panel-card">
+            <div class="panel-header">
+              <div class="panel-title">👥 Registered Players Manifest</div>
+              <div class="panel-actions">
+                <select id="players-tourn-select" class="form-control" style="min-width: 260px;">
+                  <option value="">-- Choose a Tournament --</option>
+                </select>
+                <input type="text" id="player-search-input" class="search-input" placeholder="Filter slot, IGN, UID..." oninput="filterPlayers()">
+                <button type="button" class="btn btn-secondary" onclick="copyRosterToClipboard()">📋 Copy Roster</button>
+                <button type="button" id="btn-notify-selected-players" class="btn btn-warning" onclick="notifySelectedTournamentPlayers()" disabled>
+                  📢 Notify Selected (<span id="txt-selected-players-count">0</span>)
+                </button>
+                <button type="button" id="btn-notify-match-players" class="btn btn-primary" onclick="notifyTournamentJoinedPlayers()">
+                  📢 Notify All Joined (<span id="txt-joined-count">0</span>)
+                </button>
+              </div>
+            </div>
+            <div class="panel-body" style="padding: 0;">
+              <div class="table-responsive">
+                <table class="data-table">
+                  <thead>
+                    <tr>
+                      <th style="width: 40px; text-align: center;">
+                        <input type="checkbox" id="participants-select-all" onchange="toggleSelectAllParticipants(this.checked)" title="Select All Players in This Match">
+                      </th>
+                      <th>Slot</th>
+                      <th>Team Name</th>
+                      <th>Players &amp; Free Fire UIDs</th>
+                      <th>Fee Paid</th>
+                      <th>Registered At</th>
+                      <th>Status</th>
+                      <th>Action</th>
+                    </tr>
+                  </thead>
+                  <tbody id="players-tbody">
+                    <tr><td colspan="8" class="empty-state">Select a tournament above to inspect enrolled players.</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- 4. MATCH ROOM MANAGER VIEW -->
+        <section id="view-room" class="view-section">
+          <div class="panel-card">
+            <div class="panel-header">
+              <div class="panel-title">🔑 Custom Room Credentials Manager</div>
+              <div class="panel-actions">
+                <select id="room-tourn-select" class="form-control" style="min-width: 260px;">
+                  <option value="">-- Choose a Tournament --</option>
+                </select>
+              </div>
+            </div>
+            <div class="panel-body">
+              <div id="room-details-card" style="display: none; max-width: 680px;">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;">
+                  <h3 style="font-size: 16px;">Room Security Status:</h3>
+                  <span id="room-status-badge" class="badge badge-pending">PENDING</span>
+                </div>
+
+                <div id="current-room-info-display"></div>
+
+                <form id="form-room-credentials">
+                  <div class="form-row">
+                    <div class="form-group">
+                      <label class="form-label">Free Fire Room ID *</label>
+                      <input type="text" id="room-id-input" class="form-control" placeholder="e.g. 9845123" required />
+                    </div>
+                    <div class="form-group">
+                      <label class="form-label">Room Password *</label>
+                      <input type="text" id="room-pass-input" class="form-control" placeholder="e.g. 1234" required />
+                    </div>
+                  </div>
+
+                  <div class="form-group">
+                    <label class="form-label">Credential Release Policy</label>
+                    <div style="display: flex; gap: 16px; margin-top: 6px; font-size: 13px;">
+                      <label style="display: flex; align-items: center; gap: 6px; cursor: pointer;">
+                        <input type="radio" name="room-release-timing" value="15mins" checked />
+                        <span>15 Mins Before Match (Recommended)</span>
+                      </label>
+                      <label style="display: flex; align-items: center; gap: 6px; cursor: pointer;">
+                        <input type="radio" name="room-release-timing" value="now" />
+                        <span>Release Immediately (Now)</span>
+                      </label>
+                    </div>
+                  </div>
+
+                  <div class="form-group">
+                    <label class="form-label">Match Room Instructions for Players</label>
+                    <textarea id="room-instructions-input" class="form-control" rows="4"></textarea>
+                  </div>
+
+                  <button type="submit" id="btn-save-room-credentials" class="btn btn-primary" style="height: 44px; width: 100%;">
+                    Save Credentials & Record Audit Log
+                  </button>
+                </form>
+              </div>
+
+              <div id="room-unselected-msg" class="empty-state">
+                <div class="empty-icon">🔑</div>
+                <div class="empty-title">Select a Tournament</div>
+                <div class="empty-desc">Choose a tournament from the dropdown above to manage Room ID and Password.</div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- 5. MATCH RESULTS & PAYOUTS VIEW -->
+        <section id="view-results" class="view-section">
+          <!-- CARD 1: PARTICIPANT RESULT SUBMISSIONS QUEUE (PHASE 9) -->
+          <div class="panel-card" style="margin-bottom: 24px;">
+            <div class="panel-header">
+              <div class="panel-title">🏆 Participant Match Claims &amp; Kill Rewards (৳10/Kill)</div>
+              <div class="panel-actions">
+                <input type="text" id="submissions-search-input" class="search-input" placeholder="Search Player, UID, Tournament..." oninput="filterSubmissions()">
+                <select id="submissions-status-filter" class="form-control" style="width: auto; padding: 7px 12px;" onchange="filterSubmissions()">
+                  <option value="ALL">All Claims</option>
+                  <option value="PENDING_REVIEW" selected>Pending Verification</option>
+                  <option value="APPROVED">Approved &amp; Credited</option>
+                  <option value="REJECTED">Rejected</option>
+                </select>
+                <button class="btn btn-secondary btn-sm" onclick="loadMatchSubmissions()">🔄 Refresh Claims</button>
+              </div>
+            </div>
+            <div class="panel-body" style="padding: 0;">
+              <div style="padding: 12px 22px; background: rgba(59, 130, 246, 0.08); border-bottom: 1px solid var(--border-color); font-size: 13px;">
+                🛡️ <strong>Zero-Trust Kill Verification:</strong> Player claims do not credit wallets automatically. Moderators must inspect evidence and input verified kills. Reward is computed server-side: <code>Verified Kills × ৳10</code> + optional Rank Prize.
+              </div>
+              <div class="table-responsive">
+                <table class="data-table">
+                  <thead>
+                    <tr>
+                      <th>Player (IGN / UID)</th>
+                      <th>Tournament</th>
+                      <th>Claimed Kills &amp; Rank</th>
+                      <th>Evidence / Screenshot</th>
+                      <th>Submitted At</th>
+                      <th>Status</th>
+                      <th>Verification Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody id="submissions-tbody">
+                    <tr><td colspan="7" class="loading-container"><div class="loading-spinner"></div>Loading claims queue...</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <!-- CARD 2: BULK TOURNAMENT EVALUATION SHEET -->
+          <div class="panel-card">
+            <div class="panel-header">
+              <div class="panel-title">🎯 Match Results & Atomic Prize Distribution</div>
+              <div class="panel-actions">
+                <select id="results-tourn-select" class="form-control" style="min-width: 260px;">
+                  <option value="">-- Choose a Tournament to Evaluate --</option>
+                </select>
+                <div id="results-status-note"></div>
+              </div>
+            </div>
+            <div class="panel-body" style="padding: 0;">
+              <div id="results-evaluation-panel" style="display: none;">
+                <div style="padding: 16px 22px; background: rgba(255, 193, 7, 0.08); border-bottom: 1px solid var(--border-color); font-size: 13px;">
+                  ⚠️ <strong>Financial Operation Notice:</strong> When you click "Publish Results & Credit Player Wallets", Cloud Functions will atomically credit winners' balances, record transaction ledger entries, mark the match Completed, and record an immutable audit log.
+                </div>
+                <div class="table-responsive">
+                  <table class="data-table">
+                    <thead>
+                      <tr>
+                        <th>Slot</th>
+                        <th>Team Name</th>
+                        <th>Roster</th>
+                        <th>Rank</th>
+                        <th>Kills</th>
+                        <th>Prize (৳)</th>
+                        <th>Payout Status</th>
+                      </tr>
+                    </thead>
+                    <tbody id="results-tbody">
+                      <tr><td colspan="7" class="loading-container"><div class="loading-spinner"></div>Loading...</td></tr>
+                    </tbody>
+                  </table>
+                </div>
+                <div style="padding: 18px 22px; border-top: 1px solid var(--border-color); display: flex; justify-content: flex-end;">
+                  <button id="btn-publish-results" class="btn btn-success" style="height: 44px; padding: 0 24px;">
+                    Publish Results & Credit Player Wallets
+                  </button>
+                </div>
+              </div>
+
+              <div id="results-unselected-msg" class="empty-state">
+                <div class="empty-icon">🎯</div>
+                <div class="empty-title">Select a Tournament</div>
+                <div class="empty-desc">Choose a completed or live match to enter placements and distribute prize winnings.</div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- 6. DEPOSITS VIEW -->
+        <section id="view-deposits" class="view-section">
+          <div class="panel-card">
+            <div class="panel-header">
+              <div class="panel-title">💳 Player Deposit Requests</div>
+              <div class="panel-actions">
+                <input type="text" id="deposit-search-input" class="search-input" placeholder="Search User ID, TrxID..." oninput="filterDeposits()">
+                <select id="deposit-status-filter" class="form-control" style="width: auto; padding: 7px 12px;" onchange="filterDeposits()">
+                  <option value="ALL">All Statuses</option>
+                  <option value="PENDING" selected>Pending Verification</option>
+                  <option value="UNDER_REVIEW">Under Review</option>
+                  <option value="APPROVED">Approved &amp; Credited</option>
+                  <option value="REJECTED">Rejected</option>
+                </select>
+                <button type="button" id="btn-bulk-delete-deposits" class="btn btn-danger btn-sm" onclick="openBulkDeleteDepositsModal()" disabled>
+                  🗑️ Delete Selected (<span id="deposits-selected-count">0</span>)
+                </button>
+                <button class="btn btn-primary btn-sm" onclick="openConfigurePaymentSettingsModal()">⚙️ Payment Numbers &amp; Rules</button>
+                <button class="btn btn-secondary btn-sm" onclick="loadDeposits()">🔄 Refresh</button>
+              </div>
+            </div>
+            <div class="panel-body" style="padding: 0;">
+              <div class="table-responsive">
+                <table class="data-table">
+                  <thead>
+                    <tr>
+                      <th style="width: 40px; text-align: center;">
+                        <input type="checkbox" id="deposits-select-all" onchange="toggleSelectAllDeposits(this.checked)" title="Select All Deposit Requests">
+                      </th>
+                      <th>Request ID</th>
+                      <th>User ID</th>
+                      <th>Amount</th>
+                      <th>Method</th>
+                      <th>Transaction TrxID</th>
+                      <th>Sender Number</th>
+                      <th>Status</th>
+                      <th>Action</th>
+                    </tr>
+                  </thead>
+                  <tbody id="deposits-tbody">
+                    <tr><td colspan="9" class="loading-container"><div class="loading-spinner"></div>Loading deposits...</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- 7. WITHDRAWALS VIEW -->
+        <section id="view-withdrawals" class="view-section">
+          <div class="panel-card">
+            <div class="panel-header">
+              <div class="panel-title">💸 Player Withdrawal Requests</div>
+              <div class="panel-actions">
+                <input type="text" id="withdrawal-search-input" class="search-input" placeholder="Search User ID, Phone..." oninput="filterWithdrawals()">
+                <select id="withdrawal-status-filter" class="form-control" style="width: auto; padding: 7px 12px;" onchange="filterWithdrawals()">
+                  <option value="ALL">All Statuses</option>
+                  <option value="PENDING" selected>Pending Payout</option>
+                  <option value="COMPLETED">Completed</option>
+                  <option value="REJECTED">Rejected & Refunded</option>
+                </select>
+                <button type="button" id="btn-bulk-delete-withdrawals" class="btn btn-danger btn-sm" onclick="openBulkDeleteWithdrawalsModal()" disabled>
+                  🗑️ Delete Selected (<span id="withdrawals-selected-count">0</span>)
+                </button>
+                <button class="btn btn-primary btn-sm" onclick="openConfigurePaymentSettingsModal()">⚙️ Limits &amp; Rules</button>
+                <button class="btn btn-secondary btn-sm" onclick="loadWithdrawals()">🔄 Refresh</button>
+              </div>
+            </div>
+            <div class="panel-body" style="padding: 0;">
+              <div class="table-responsive">
+                <table class="data-table">
+                  <thead>
+                    <tr>
+                      <th style="width: 40px; text-align: center;">
+                        <input type="checkbox" id="withdrawals-select-all" onchange="toggleSelectAllWithdrawals(this.checked)" title="Select All Withdrawal Requests">
+                      </th>
+                      <th>Request ID</th>
+                      <th>User ID</th>
+                      <th>Amount</th>
+                      <th>Method</th>
+                      <th>Receiver Phone</th>
+                      <th>Status</th>
+                      <th>Submitted At</th>
+                      <th>Action</th>
+                    </tr>
+                  </thead>
+                  <tbody id="withdrawals-tbody">
+                    <tr><td colspan="9" class="loading-container"><div class="loading-spinner"></div>Loading withdrawals...</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- 8. TRANSACTIONS VIEW -->
+        <section id="view-transactions" class="view-section">
+          <div class="panel-card">
+            <div class="panel-header">
+              <div class="panel-title">📜 Platform Financial Transaction Ledger</div>
+              <div class="panel-actions">
+                <input type="text" id="tx-search-input" class="search-input" placeholder="Search User ID or TxID..." oninput="filterTransactions()">
+                <select id="tx-type-filter" class="form-control" style="width: auto; padding: 7px 12px;" onchange="filterTransactions()">
+                  <option value="ALL">All Types</option>
+                  <option value="DEPOSIT">Deposits</option>
+                  <option value="WITHDRAWAL">Withdrawals</option>
+                  <option value="WINNING">Match Winnings</option>
+                  <option value="REFUND">Refunds</option>
+                  <option value="ENTRY_FEE">Entry Fees</option>
+                </select>
+                <button class="btn btn-warning btn-sm" onclick="openReconcileModal()">⚖️ Reconcile Ledger</button>
+                <button class="btn btn-secondary btn-sm" onclick="loadTransactions()">🔄 Refresh</button>
+              </div>
+            </div>
+            <div class="panel-body" style="padding: 0;">
+              <div class="table-responsive">
+                <table class="data-table">
+                  <thead>
+                    <tr>
+                      <th>Transaction ID</th>
+                      <th>User ID</th>
+                      <th>Type</th>
+                      <th>Amount</th>
+                      <th>Details / Note</th>
+                      <th>Status</th>
+                      <th>Timestamp</th>
+                    </tr>
+                  </thead>
+                  <tbody id="transactions-tbody">
+                    <tr><td colspan="7" class="loading-container"><div class="loading-spinner"></div>Loading ledger...</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- 9. USERS VIEW -->
+        <section id="view-users" class="view-section">
+          <div class="panel-card">
+            <div class="panel-header">
+              <div class="panel-title">👤 User Accounts &amp; Permissions</div>
+              <div class="panel-actions">
+                <input type="text" id="user-search-input" class="search-input" placeholder="Search Name, Email, FF UID..." oninput="filterUsers()">
+                <select id="user-role-filter" class="form-control" style="width: auto; padding: 7px 12px;" onchange="filterUsers()">
+                  <option value="ALL">All Roles</option>
+                  <option value="player">Players</option>
+                  <option value="moderator">Moderators</option>
+                  <option value="admin">Administrators</option>
+                </select>
+                <button type="button" class="btn btn-primary btn-sm" onclick="openBroadcastNotificationModal()">📢 Broadcast Push to All</button>
+                <button type="button" id="btn-notify-selected-users" class="btn btn-warning btn-sm" onclick="openNotifySelectedUsersModal()" disabled>📢 Notify Selected (<span id="users-selected-count">0</span>)</button>
+                <button id="btn-deletion-requests" class="btn btn-secondary btn-sm" onclick="openDeletionRequestsModal()">🗑️ Deletion Requests <span id="deletion-requests-badge" class="badge badge-danger" style="display:none; margin-left:4px;">0</span></button>
+                <button class="btn btn-secondary btn-sm" onclick="loadUsers()">🔄 Refresh</button>
+              </div>
+            </div>
+            <div class="panel-body" style="padding: 0;">
+              <div class="table-responsive">
+                <table class="data-table">
+                  <thead>
+                    <tr>
+                      <th style="width: 40px; text-align: center;">
+                        <input type="checkbox" id="users-select-all" onchange="toggleSelectAllUsers(this.checked)" title="Select All Users">
+                      </th>
+                      <th>Player &amp; Email</th>
+                      <th>Free Fire Identity</th>
+                      <th>Wallet Balance</th>
+                      <th>Financial &amp; Game Stats</th>
+                      <th>Role</th>
+                      <th>Status</th>
+                      <th>Joined At</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody id="users-tbody">
+                    <tr><td colspan="9" class="loading-container"><div class="loading-spinner"></div>Loading users...</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- 10. DISPUTES & SUPPORT VIEW (PHASE 10) -->
+        <section id="view-disputes" class="view-section">
+          <!-- PHASE 10: Player Support Tickets & Dispute Cases -->
+          <div class="panel-card" style="margin-bottom: 24px;">
+            <div class="panel-header">
+              <div>
+                <div class="panel-title">🎧 Player Support Cases &amp; Category Disputes</div>
+                <div style="font-size: 12px; color: var(--text-secondary); margin-top: 2px;">
+                  Customer inquiries, payment disputes, match protests, and account access issues
+                </div>
+              </div>
+              <div class="panel-actions">
+                <input type="text" id="support-search-input" class="search-input" placeholder="Search Subject, UID, Email..." oninput="filterSupportTickets()">
+                <select id="support-category-filter" class="form-control" style="width: auto; padding: 7px 12px;" onchange="filterSupportTickets()">
+                  <option value="ALL">All Categories</option>
+                  <option value="Deposit">Deposit</option>
+                  <option value="Withdrawal">Withdrawal</option>
+                  <option value="Tournament registration">Tournament Registration</option>
+                  <option value="Match results">Match Results</option>
+                  <option value="Rewards">Rewards</option>
+                  <option value="Account access">Account Access</option>
+                </select>
+                <select id="support-status-filter" class="form-control" style="width: auto; padding: 7px 12px;" onchange="filterSupportTickets()">
+                  <option value="ALL">All Statuses</option>
+                  <option value="OPEN" selected>Open &amp; Pending</option>
+                  <option value="IN_REVIEW">Under Review</option>
+                  <option value="RESOLVED">Resolved</option>
+                  <option value="CLOSED">Closed</option>
+                </select>
+                <button type="button" id="btn-bulk-delete-support" class="btn btn-danger btn-sm" onclick="openBulkDeleteSupportTicketsModal()" disabled>
+                  🗑️ Delete Selected (<span id="support-selected-count">0</span>)
+                </button>
+                <button class="btn btn-secondary btn-sm" onclick="openSendNotificationModal()">🔔 Send Notification</button>
+              </div>
+            </div>
+            <div class="panel-body" style="padding: 0;">
+              <div class="table-responsive">
+                <table class="data-table">
+                  <thead>
+                    <tr>
+                      <th style="width: 40px; text-align: center;">
+                        <input type="checkbox" id="support-select-all" onchange="toggleSelectAllSupportTickets(this.checked)" title="Select All Support Cases">
+                      </th>
+                      <th>Case ID</th>
+                      <th>Category</th>
+                      <th>Player Info</th>
+                      <th>Subject &amp; Details</th>
+                      <th>Ref ID</th>
+                      <th>Status</th>
+                      <th>Submitted</th>
+                      <th>Action</th>
+                    </tr>
+                  </thead>
+                  <tbody id="support-tickets-tbody">
+                    <tr><td colspan="9" class="loading-container"><div class="loading-spinner"></div>Loading support cases...</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <!-- Lobby Intruder & Anti-Cheat Reports -->
+          <div class="panel-card">
+            <div class="panel-header">
+              <div class="panel-title">🛡️ In-Game Intruder &amp; Anti-Cheat Reports</div>
+              <div class="panel-actions">
+                <input type="text" id="dispute-search-input" class="search-input" placeholder="Search UID, Reason..." oninput="filterDisputes()">
+                <select id="dispute-status-filter" class="form-control" style="width: auto; padding: 7px 12px;" onchange="filterDisputes()">
+                  <option value="ALL">All Reports</option>
+                  <option value="PENDING" selected>Pending Review</option>
+                  <option value="RESOLVED">Resolved</option>
+                  <option value="DISMISSED">Dismissed</option>
+                </select>
+                <button type="button" id="btn-bulk-delete-disputes" class="btn btn-danger btn-sm" onclick="openBulkDeleteDisputesModal()" disabled>
+                  🗑️ Delete Selected (<span id="disputes-selected-count">0</span>)
+                </button>
+                <button class="btn btn-primary btn-sm" onclick="openManualRefundModal()">💸 Issue Manual Refund</button>
+              </div>
+            </div>
+            <div class="panel-body" style="padding: 0;">
+              <div class="table-responsive">
+                <table class="data-table">
+                  <thead>
+                    <tr>
+                      <th style="width: 40px; text-align: center;">
+                        <input type="checkbox" id="disputes-select-all" onchange="toggleSelectAllDisputes(this.checked)" title="Select All Reports">
+                      </th>
+                      <th>Report ID</th>
+                      <th>Tournament ID</th>
+                      <th>Reported Free Fire UID</th>
+                      <th>Reported IGN</th>
+                      <th>Reason / Complaint</th>
+                      <th>Status</th>
+                      <th>Action</th>
+                    </tr>
+                  </thead>
+                  <tbody id="disputes-tbody">
+                    <tr><td colspan="8" class="loading-container"><div class="loading-spinner"></div>Loading reports...</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- 11. AUDIT LOGS VIEW -->
+        <section id="view-audit" class="view-section">
+          <div class="panel-card">
+            <div class="panel-header">
+              <div class="panel-title">📋 Immutable Administrative Audit Trail</div>
+              <div class="panel-actions">
+                <input type="text" id="audit-search-input" class="search-input" placeholder="Search Admin ID, Tourn ID..." oninput="filterAuditLogs()">
+                <select id="audit-action-filter" class="form-control" style="width: auto; padding: 7px 12px;" onchange="filterAuditLogs()">
+                  <option value="ALL">All Actions</option>
+                  <option value="TOURNAMENT_CREATED">Tournament Created</option>
+                  <option value="TOURNAMENT_UPDATED">Tournament Updated</option>
+                  <option value="TOURNAMENT_CANCELLED">Tournament Cancelled</option>
+                  <option value="ROOM_CREDENTIALS_CONFIGURED">Room Configured</option>
+                  <option value="MATCH_RESULTS_PUBLISHED">Results Published</option>
+                  <option value="DEPOSIT_APPROVED">Deposit Approved</option>
+                  <option value="DEPOSIT_REJECTED">Deposit Rejected</option>
+                  <option value="WITHDRAWAL_APPROVED">Withdrawal Approved</option>
+                  <option value="WITHDRAWAL_REJECTED">Withdrawal Rejected</option>
+                  <option value="USER_STATUS_UPDATED">User Status Updated</option>
+                  <option value="REPORT_RESOLVED">Report Resolved</option>
+                </select>
+                <button class="btn btn-secondary btn-sm" onclick="loadAuditLogs()">🔄 Refresh</button>
+              </div>
+            </div>
+            <div class="panel-body" style="padding: 0;">
+              <div class="table-responsive">
+                <table class="data-table">
+                  <thead>
+                    <tr>
+                      <th>Log ID</th>
+                      <th>Action</th>
+                      <th>Admin ID</th>
+                      <th>Tournament ID</th>
+                      <th>Details (JSON)</th>
+                      <th>Timestamp</th>
+                    </tr>
+                  </thead>
+                  <tbody id="audit-tbody">
+                    <tr><td colspan="6" class="loading-container"><div class="loading-spinner"></div>Loading audit logs...</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- 12. APP UPDATE MANAGEMENT VIEW -->
+        <section id="view-app-updates" class="view-section">
+          <!-- Summary KPIs -->
+          <div class="stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); margin-bottom: 24px;">
+            <div class="stat-card">
+              <div class="stat-label">Active Update Mode</div>
+              <div class="stat-value" id="kpi-update-mode" style="color: var(--primary);">DIRECT</div>
+              <div class="stat-meta" id="kpi-update-mode-desc">Firebase APK Download</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-label">Latest Released Version</div>
+              <div class="stat-value" id="kpi-latest-version" style="color: var(--accent-green);">v1.0</div>
+              <div class="stat-meta" id="kpi-latest-version-code">Version Code: 1</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-label">Min. Supported Version</div>
+              <div class="stat-value" id="kpi-min-version" style="color: var(--accent-cyan);">Code: 1</div>
+              <div class="stat-meta">Older versions blocked</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-label">Update Enforcement</div>
+              <div class="stat-value" id="kpi-mandatory-status" style="color: var(--accent-orange);">Optional</div>
+              <div class="stat-meta">App entry policy</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-label">Maintenance Mode</div>
+              <div class="stat-value" id="kpi-maintenance-status" style="color: var(--text-secondary);">INACTIVE</div>
+              <div class="stat-meta">Normal player access</div>
+            </div>
+          </div>
+
+          <!-- Global Controls & Emergency Maintenance -->
+          <div class="panel-card" style="margin-bottom: 24px; border-left: 4px solid var(--primary);">
+            <div class="panel-header">
+              <div class="panel-title">⚙️ Update System Mode &amp; Server Maintenance</div>
+              <div class="panel-actions">
+                <span id="update-system-sync-status" class="badge badge-open">Realtime Synced</span>
+              </div>
+            </div>
+            <div class="panel-body">
+              <div class="responsive-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); gap: 16px;">
+                <!-- Mode Switcher -->
+                <div style="background: rgba(255, 255, 255, 0.03); padding: 16px; border-radius: var(--radius-sm); border: 1px solid var(--border-color);">
+                  <h4 style="margin: 0 0 10px; font-size: 14px; color: var(--text-primary); display: flex; align-items: center; gap: 8px;">
+                    <span>🎯 Active Distribution Channel</span>
+                  </h4>
+                  <p style="font-size: 12.5px; color: var(--text-secondary); margin: 0 0 14px; line-height: 1.4;">
+                    Switch between Direct Firebase APK updates (Pre-Play Store) and official Google Play Store In-App Updates (Post-Launch).
+                  </p>
+                  <div style="display: flex; gap: 16px; align-items: center; flex-wrap: wrap;">
+                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 13px; font-weight: 600;">
+                      <input type="radio" name="app-update-mode-choice" value="DIRECT" id="radio-mode-direct" checked onchange="handleModeRadioChange('DIRECT')" />
+                      <span>Mode A: Direct Firebase APK</span>
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 13px; font-weight: 600;">
+                      <input type="radio" name="app-update-mode-choice" value="PLAY_STORE" id="radio-mode-play" onchange="handleModeRadioChange('PLAY_STORE')" />
+                      <span>Mode B: Google Play Store</span>
+                    </label>
+                  </div>
+                  <div id="mode-warning-note" style="margin-top: 12px; font-size: 11.5px; color: var(--accent-orange); display: none;">
+                    ⚠️ Note: Google Play Store builds strictly prevent direct APK sideloading for user safety.
+                  </div>
+                </div>
+
+                <!-- Emergency Maintenance Switch -->
+                <div style="background: rgba(255, 255, 255, 0.03); padding: 16px; border-radius: var(--radius-sm); border: 1px solid var(--border-color);">
+                  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                    <h4 style="margin: 0; font-size: 14px; color: var(--accent-red); display: flex; align-items: center; gap: 8px;">
+                      <span>🛑 Emergency Maintenance Mode</span>
+                    </h4>
+                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 13px; font-weight: 600;">
+                      <input type="checkbox" id="chk-maintenance-mode" onchange="toggleMaintenanceMode(this.checked)" style="transform: scale(1.3); cursor: pointer;" />
+                      <span id="maintenance-toggle-label" style="color: var(--text-secondary); font-size: 12px;">OFF</span>
+                    </label>
+                  </div>
+                  <p style="font-size: 12.5px; color: var(--text-secondary); margin: 0 0 10px; line-height: 1.4;">
+                    When enabled, all players see a non-cancellable maintenance dialog and cannot enter the Arena or matches.
+                  </p>
+                  <div class="form-group" style="margin-bottom: 8px;">
+                    <input type="text" id="input-maintenance-message" class="form-control" style="font-size: 12px;" placeholder="Maintenance notice to display to players..." value="We are currently undergoing scheduled maintenance to upgrade servers. Please check back shortly." />
+                  </div>
+                  <button type="button" class="btn btn-secondary btn-sm" onclick="saveMaintenanceMessage()" style="font-size: 11.5px;">Update Notice Message</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Two Main Mode Panels Grid -->
+          <div class="responsive-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr)); gap: 16px; margin-bottom: 24px;">
+
+            <!-- PANEL 1: Mode A (Direct Firebase APK Publisher) -->
+            <div class="panel-card" id="card-mode-direct-publisher">
+              <div class="panel-header">
+                <div class="panel-title">📦 Mode A: Direct Firebase APK Publisher</div>
+                <span class="badge badge-primary">Pre-Play Store</span>
+              </div>
+              <div class="panel-body">
+                <form id="form-publish-direct-apk" onsubmit="handlePublishDirectApk(event)">
+                  <!-- Dropzone for APK -->
+                  <div id="apk-dropzone" style="border: 2px dashed var(--border-color); border-radius: var(--radius-sm); padding: 20px; text-align: center; cursor: pointer; transition: border-color 0.3s, background 0.3s; margin-bottom: 16px; background: rgba(0,0,0,0.15);" onclick="document.getElementById('apk-file-input').click()">
+                    <div style="font-size: 36px; margin-bottom: 8px;">📲</div>
+                    <div style="font-weight: 600; font-size: 14px; margin-bottom: 4px;">Click or Drag &amp; Drop APK File Here</div>
+                    <div style="font-size: 12px; color: var(--text-secondary);">Only valid compiled .apk files (e.g. app-release.apk)</div>
+                    <input type="file" id="apk-file-input" accept=".apk" style="display: none;" onchange="onApkFileSelected(this.files[0])" />
+                  </div>
+
+                  <!-- File Info & SHA-256 Card -->
+                  <div id="apk-file-preview-card" style="display: none; background: rgba(0,255,136,0.06); border: 1px solid rgba(0,255,136,0.3); border-radius: var(--radius-sm); padding: 12px; margin-bottom: 16px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                      <strong id="apk-preview-name" style="color: var(--accent-green); font-size: 13px;">app-release.apk</strong>
+                      <span id="apk-preview-size" class="badge badge-open">0 MB</span>
+                    </div>
+                    <div style="font-size: 11px; color: var(--text-secondary); word-break: break-all;">
+                      <strong>Computed SHA-256 Checksum:</strong>
+                      <div id="apk-preview-sha256" style="font-family: monospace; color: var(--secondary); margin-top: 2px;">Computing hash...</div>
+                    </div>
+                  </div>
+
+                  <!-- Upload Progress Bar -->
+                  <div id="apk-upload-progress-container" style="display: none; margin-bottom: 16px;">
+                    <div style="display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 4px;">
+                      <span id="apk-upload-status-text">Uploading APK to Firebase Storage...</span>
+                      <span id="apk-upload-percent-text" style="font-weight: 700; color: var(--primary);">0%</span>
+                    </div>
+                    <div style="background: rgba(255,255,255,0.1); border-radius: 4px; height: 8px; overflow: hidden;">
+                      <div id="apk-upload-progress-bar" style="background: var(--primary); width: 0%; height: 100%; transition: width 0.2s;"></div>
+                    </div>
+                  </div>
+
+                  <!-- Version Fields -->
+                  <div class="form-row">
+                    <div class="form-group">
+                      <label class="form-label">Version Name *</label>
+                      <input type="text" id="apk-version-name" class="form-control" placeholder="e.g. 1.1.0" required />
+                      <small style="font-size: 11px; color: var(--text-secondary);">Visible to users (e.g. 1.1.0)</small>
+                    </div>
+                    <div class="form-group">
+                      <label class="form-label">Version Code *</label>
+                      <input type="number" id="apk-version-code" class="form-control" min="1" placeholder="e.g. 2" required />
+                      <small style="font-size: 11px; color: var(--text-secondary);">Must be greater than current (<span id="txt-current-vcode">1</span>)</small>
+                    </div>
+                  </div>
+
+                  <div class="form-row">
+                    <div class="form-group">
+                      <label class="form-label">Minimum Required Version Code *</label>
+                      <input type="number" id="apk-min-version-code" class="form-control" min="1" value="1" required />
+                      <small style="font-size: 11px; color: var(--text-secondary);">Any app below this is forcibly blocked</small>
+                    </div>
+                    <div class="form-group">
+                      <label class="form-label">Package Name Guard</label>
+                      <input type="text" class="form-control" value="com.fftornament.best" readonly style="background: rgba(255,255,255,0.05); color: var(--text-secondary);" />
+                      <small style="font-size: 11px; color: var(--text-secondary);">Verified on device during install</small>
+                    </div>
+                  </div>
+
+                  <div class="form-group">
+                    <label class="form-label">Update Title *</label>
+                    <input type="text" id="apk-update-title" class="form-control" placeholder="e.g. Major Arena Update v1.1.0 Available!" required />
+                  </div>
+
+                  <div class="form-group">
+                    <label class="form-label">Release Notes &amp; Changelog *</label>
+                    <textarea id="apk-update-changelog" class="form-control" rows="4" placeholder="• Added new Solo &amp; Squad Tournaments&#10;• Faster room credential refresh&#10;• Security enhancements and bug fixes" required></textarea>
+                  </div>
+
+                  <div class="form-group" style="background: rgba(255,255,255,0.03); padding: 12px; border-radius: var(--radius-sm); border: 1px solid var(--border-color);">
+                    <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; font-size: 13px; font-weight: 600;">
+                      <input type="checkbox" id="apk-mandatory-update" />
+                      <span>Enforce Mandatory Update (Force Full-Screen Block)</span>
+                    </label>
+                    <div style="font-size: 11.5px; color: var(--text-secondary); margin-top: 4px; margin-left: 24px;">
+                      If checked, players cannot skip or close the update screen. They must update to proceed.
+                    </div>
+                  </div>
+
+                  <div style="display: flex; gap: 12px; justify-content: flex-end; margin-top: 16px;">
+                    <button type="submit" id="btn-publish-direct-release" class="btn btn-primary" style="min-width: 180px;">
+                      🚀 Upload &amp; Publish Update
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+
+            <!-- PANEL 2: Mode B (Google Play Store In-App Updates) -->
+            <div class="panel-card" id="card-mode-play-publisher">
+              <div class="panel-header">
+                <div class="panel-title">🏪 Mode B: Google Play In-App Updates</div>
+                <span class="badge badge-open">Official Store Integration</span>
+              </div>
+              <div class="panel-body">
+                <form id="form-playstore-settings" onsubmit="handleSavePlayStoreSettings(event)">
+                  <div style="background: rgba(0, 168, 255, 0.08); border: 1px solid rgba(0, 168, 255, 0.25); border-radius: var(--radius-sm); padding: 14px; margin-bottom: 16px; font-size: 12.5px; line-height: 1.5; color: var(--text-primary);">
+                    <strong>Google Play App Update API:</strong><br>
+                    Once published on Google Play, Google's verified servers manage the binary downloads. This configuration controls how the tournament app requests in-app update checks from the Play Core library.
+                  </div>
+
+                  <div class="form-group">
+                    <label class="form-label">In-App Update Flow Type *</label>
+                    <select id="play-update-type" class="form-control">
+                      <option value="IMMEDIATE">IMMEDIATE (Mandatory full-screen blocking update)</option>
+                      <option value="FLEXIBLE">FLEXIBLE (Background download, player can keep playing)</option>
+                    </select>
+                    <small style="font-size: 11px; color: var(--text-secondary);">
+                      <strong>Immediate:</strong> Requires update before continuing. <strong>Flexible:</strong> Non-intrusive.
+                    </small>
+                  </div>
+
+                  <div class="form-group">
+                    <label class="form-label">Minimum Required Play Store Version Code</label>
+                    <input type="number" id="play-min-version-code" class="form-control" min="1" value="1" />
+                    <small style="font-size: 11px; color: var(--text-secondary);">Forces immediate blocking update if installed version is lower</small>
+                  </div>
+
+                  <div class="form-group">
+                    <label class="form-label">Google Play Package Name</label>
+                    <input type="text" class="form-control" value="com.fftornament.best" readonly style="background: rgba(255,255,255,0.05); color: var(--text-secondary);" />
+                    <small style="font-size: 11px; color: var(--text-secondary);">Locked to official package identity</small>
+                  </div>
+
+                  <div class="form-group" style="background: rgba(255,255,255,0.03); padding: 12px; border-radius: var(--radius-sm); border: 1px solid var(--border-color);">
+                    <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; font-size: 13px; font-weight: 600;">
+                      <input type="checkbox" id="chk-playstore-enabled" checked />
+                      <span>Enable Play Store In-App Updates in App</span>
+                    </label>
+                    <div style="font-size: 11.5px; color: var(--text-secondary); margin-top: 4px; margin-left: 24px;">
+                      When active and app runs in Play Store mode, it invokes Play Core's AppUpdateManager.
+                    </div>
+                  </div>
+
+                  <div style="display: flex; gap: 12px; justify-content: flex-end; margin-top: 16px;">
+                    <button type="submit" id="btn-save-play-settings" class="btn btn-primary" style="min-width: 180px;">
+                      💾 Save Play Store Policy
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Release History & Rollback Table -->
+          <div class="panel-card">
+            <div class="panel-header">
+              <div class="panel-title">📜 App Release History &amp; Version Management</div>
+              <div class="panel-actions">
+                <button type="button" class="btn btn-secondary btn-sm" onclick="loadAppUpdatesModule()">🔄 Refresh History</button>
+              </div>
+            </div>
+            <div class="panel-body" style="padding: 0;">
+              <div class="table-responsive">
+                <table class="data-table">
+                  <thead>
+                    <tr>
+                      <th>Version</th>
+                      <th>Version Code</th>
+                      <th>Channel</th>
+                      <th>SHA-256 Checksum</th>
+                      <th>Size</th>
+                      <th>Type</th>
+                      <th>Published At</th>
+                      <th>Status</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody id="app-releases-tbody">
+                    <tr><td colspan="9" class="loading-container"><div class="loading-spinner"></div>Loading release records...</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </section>
+
+      </main>
+    </div>
+  </div>
+
+  <!-- ======================================================================
+       MODAL DIALOGS
+       ====================================================================== -->
+
+  <!-- Modal: Create Tournament -->
+  <div id="modal-create-tournament" class="modal-overlay">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 class="modal-title">🏆 Create New Tournament</h3>
+        <button class="modal-close" onclick="closeModal('modal-create-tournament')">&times;</button>
+      </div>
+      <form id="form-create-tournament">
+        <div class="modal-body">
+          <div class="form-group">
+            <label class="form-label">Tournament Title *</label>
+            <input type="text" id="create-title" class="form-control" placeholder="e.g. Free Fire Solo Champions Cup #1" required />
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Description</label>
+            <textarea id="create-desc" class="form-control" rows="2" placeholder="Brief match details..."></textarea>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Game Mode *</label>
+              <select id="create-mode" class="form-control" required>
+                <option value="Solo">Solo</option>
+                <option value="Duo">Duo</option>
+                <option value="Squad">Squad</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Map *</label>
+              <select id="create-map" class="form-control" required>
+                <option value="Bermuda">Bermuda</option>
+                <option value="Purgatory">Purgatory</option>
+                <option value="Kalahari">Kalahari</option>
+                <option value="Alpine">Alpine</option>
+                <option value="NexTerra">NexTerra</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Total Slots *</label>
+              <input type="number" id="create-slots" class="form-control" value="48" min="2" max="100" required />
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Entry Fee (৳)</label>
+              <input type="number" id="create-fee" class="form-control" value="0" min="0" />
+            </div>
+            <div class="form-group">
+              <label class="form-label">Total Prize Pool (৳) *</label>
+              <input type="number" id="create-prize-total" class="form-control" value="500" min="0" required />
+            </div>
+            <div class="form-group">
+              <label class="form-label">Per Kill Prize (৳)</label>
+              <input type="number" id="create-prize-kill" class="form-control" value="10" min="0" />
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Match Schedule Date & Time *</label>
+              <input type="datetime-local" id="create-schedule" class="form-control" required />
+            </div>
+            <div class="form-group">
+              <label class="form-label">Registration Closes At</label>
+              <input type="datetime-local" id="create-cutoff" class="form-control" />
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Rules (One rule per line)</label>
+            <textarea id="create-rules" class="form-control" rows="4">1. No emulators or hacking allowed.
+2. Join custom room 10 minutes before start.
+3. Must sit in allocated slot number.
+4. Gun attributes will be OFF.</textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="closeModal('modal-create-tournament')">Cancel</button>
+          <button type="submit" id="btn-submit-create-tourn" class="btn btn-primary">Create Tournament</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal: Edit Tournament -->
+  <div id="modal-edit-tournament" class="modal-overlay">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 class="modal-title">✏️ Edit Tournament</h3>
+        <button class="modal-close" onclick="closeModal('modal-edit-tournament')">&times;</button>
+      </div>
+      <form id="form-edit-tournament">
+        <input type="hidden" id="edit-tourn-id" />
+        <div class="modal-body">
+          <div class="form-group">
+            <label class="form-label">Title *</label>
+            <input type="text" id="edit-title" class="form-control" required />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Description</label>
+            <textarea id="edit-desc" class="form-control" rows="2"></textarea>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Mode</label>
+              <select id="edit-mode" class="form-control">
+                <option value="Solo">Solo</option>
+                <option value="Duo">Duo</option>
+                <option value="Squad">Squad</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Map</label>
+              <select id="edit-map" class="form-control">
+                <option value="Bermuda">Bermuda</option>
+                <option value="Purgatory">Purgatory</option>
+                <option value="Kalahari">Kalahari</option>
+                <option value="Alpine">Alpine</option>
+                <option value="NexTerra">NexTerra</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Status</label>
+              <select id="edit-status" class="form-control">
+                <option value="Registration Open">Registration Open</option>
+                <option value="Upcoming">Upcoming</option>
+                <option value="Live">Live</option>
+                <option value="Full">Full</option>
+                <option value="Completed">Completed</option>
+                <option value="Cancelled">Cancelled</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Total Slots</label>
+              <input type="number" id="edit-slots" class="form-control" />
+            </div>
+            <div class="form-group">
+              <label class="form-label">Entry Fee (৳)</label>
+              <input type="number" id="edit-fee" class="form-control" />
+            </div>
+            <div class="form-group">
+              <label class="form-label">Prize Pool (৳)</label>
+              <input type="number" id="edit-prize-total" class="form-control" />
+            </div>
+            <div class="form-group">
+              <label class="form-label">Per Kill (৳)</label>
+              <input type="number" id="edit-prize-kill" class="form-control" />
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Rules</label>
+            <textarea id="edit-rules" class="form-control" rows="3"></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="closeModal('modal-edit-tournament')">Cancel</button>
+          <button type="submit" id="btn-submit-edit-tourn" class="btn btn-primary">Save Changes</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal: Cancel Tournament -->
+  <div id="modal-cancel-tournament" class="modal-overlay">
+    <div class="modal-card" style="max-width: 480px;">
+      <div class="modal-header">
+        <h3 class="modal-title" style="color: var(--accent-red);">⚠️ Cancel Tournament</h3>
+        <button class="modal-close" onclick="closeModal('modal-cancel-tournament')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p style="font-size: 13px; margin-bottom: 12px;">
+          Are you sure you want to cancel tournament <strong id="cancel-tourn-id-display"></strong>?
+        </p>
+        <div style="background: rgba(255, 94, 0, 0.1); border-left: 3px solid var(--primary-orange); padding: 10px 12px; border-radius: 4px; margin-bottom: 14px; font-size: 12px; color: #ff9800;">
+          💰 <strong>Automatic Wallet Refund:</strong> All joined players will automatically receive their paid entry fee back into their wallet balance immediately upon cancellation.
+        </div>
+        <div class="form-group">
+          <label class="form-label">Cancellation Reason *</label>
+          <textarea id="cancel-reason-input" class="form-control" rows="3" placeholder="Explain why this match is being cancelled..."></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" onclick="closeModal('modal-cancel-tournament')">Back</button>
+        <button type="button" id="btn-confirm-cancel" class="btn btn-danger">Confirm Cancellation &amp; Refund Players</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Delete Tournament -->
+  <div id="modal-delete-tournament" class="modal-overlay">
+    <div class="modal-card" style="max-width: 480px;">
+      <div class="modal-header">
+        <h3 class="modal-title" style="color: var(--accent-red);">🗑️ Delete Tournament</h3>
+        <button class="modal-close" onclick="closeModal('modal-delete-tournament')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p style="font-size: 14px; margin-bottom: 12px;">
+          Are you sure you want to permanently delete tournament <strong id="delete-tourn-title-display"></strong>?
+        </p>
+        <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 12px;">
+          ID: <code id="delete-tourn-id-display"></code>
+        </div>
+        <div style="background: rgba(255, 51, 75, 0.1); border-left: 3px solid var(--accent-red); padding: 10px 12px; border-radius: 4px; margin-bottom: 14px; font-size: 12px; color: #ff5252;">
+          ⚠️ <strong>Permanent Action:</strong> This match record, its room credentials, and participant list will be permanently deleted from the database.
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" onclick="closeModal('modal-delete-tournament')">Cancel</button>
+        <button type="button" id="btn-confirm-delete" class="btn btn-danger">Permanently Delete</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Approve Deposit -->
+  <div id="modal-approve-deposit" class="modal-overlay">
+    <div class="modal-card" style="max-width: 480px;">
+      <div class="modal-header">
+        <h3 class="modal-title" style="color: var(--accent-green);">Approve Deposit Request</h3>
+        <button class="modal-close" onclick="closeModal('modal-approve-deposit')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p style="font-size: 13px; margin-bottom: 12px;">
+          Crediting Amount: <strong id="approve-deposit-amount" style="color: var(--accent-green); font-size: 16px;">৳ 0</strong><br>
+          Request ID: <span id="approve-deposit-id" style="font-family: monospace;"></span>
+        </p>
+        <div class="form-group">
+          <label class="form-label">Verification Note (Optional)</label>
+          <input type="text" id="approve-deposit-note" class="form-control" value="Transaction verified & credited" />
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" onclick="closeModal('modal-approve-deposit')">Cancel</button>
+        <button type="button" id="btn-confirm-approve-deposit" class="btn btn-success">Confirm & Credit Balance</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Reject Deposit -->
+  <div id="modal-reject-deposit" class="modal-overlay">
+    <div class="modal-card" style="max-width: 480px;">
+      <div class="modal-header">
+        <h3 class="modal-title" style="color: var(--accent-red);">Reject Deposit Request</h3>
+        <button class="modal-close" onclick="closeModal('modal-reject-deposit')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p style="font-size: 13px; margin-bottom: 12px;">
+          Reject request <span id="reject-deposit-id" style="font-family: monospace;"></span>?
+        </p>
+        <div class="form-group">
+          <label class="form-label">Rejection Reason *</label>
+          <input type="text" id="reject-deposit-reason" class="form-control" placeholder="e.g. Invalid TrxID or funds not received" required />
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" onclick="closeModal('modal-reject-deposit')">Cancel</button>
+        <button type="button" id="btn-confirm-reject-deposit" class="btn btn-danger">Confirm Rejection</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Approve Withdrawal -->
+  <div id="modal-approve-withdrawal" class="modal-overlay">
+    <div class="modal-card" style="max-width: 480px;">
+      <div class="modal-header">
+        <h3 class="modal-title" style="color: var(--accent-green);">Complete Withdrawal Payout</h3>
+        <button class="modal-close" onclick="closeModal('modal-approve-withdrawal')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p style="font-size: 13px; margin-bottom: 12px;">
+          Payout Amount: <strong id="approve-withdraw-amount" style="color: var(--secondary); font-size: 16px;">৳ 0</strong><br>
+          Request ID: <span id="approve-withdraw-id" style="font-family: monospace;"></span>
+        </p>
+        <div class="form-group">
+          <label class="form-label">Payout Reference / bKash-Nagad TrxID *</label>
+          <input type="text" id="approve-withdraw-ref" class="form-control" placeholder="e.g. 9B54A712Z" required />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Admin Note</label>
+          <input type="text" id="approve-withdraw-note" class="form-control" value="Withdrawal sent successfully." />
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" onclick="closeModal('modal-approve-withdrawal')">Cancel</button>
+        <button type="button" id="btn-confirm-approve-withdraw" class="btn btn-success">Confirm Payout Complete</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Reject Withdrawal -->
+  <div id="modal-reject-withdrawal" class="modal-overlay">
+    <div class="modal-card" style="max-width: 480px;">
+      <div class="modal-header">
+        <h3 class="modal-title" style="color: var(--accent-red);">Reject Withdrawal (Auto-Refund)</h3>
+        <button class="modal-close" onclick="closeModal('modal-reject-withdrawal')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p style="font-size: 13px; margin-bottom: 12px;">
+          Amount <strong id="reject-withdraw-amount" style="color: var(--secondary);">৳ 0</strong> will be refunded to the player's wallet balance.<br>
+          Request ID: <span id="reject-withdraw-id" style="font-family: monospace;"></span>
+        </p>
+        <div class="form-group">
+          <label class="form-label">Rejection Reason *</label>
+          <input type="text" id="reject-withdraw-reason" class="form-control" placeholder="e.g. Invalid receiver number" required />
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" onclick="closeModal('modal-reject-withdrawal')">Cancel</button>
+        <button type="button" id="btn-confirm-reject-withdraw" class="btn btn-danger">Confirm Rejection & Refund</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Ban User -->
+  <div id="modal-ban-user" class="modal-overlay">
+    <div class="modal-card" style="max-width: 480px;">
+      <div class="modal-header">
+        <h3 class="modal-title" style="color: var(--accent-red);">Ban Player Account</h3>
+        <button class="modal-close" onclick="closeModal('modal-ban-user')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p style="font-size: 13px; margin-bottom: 12px;">
+          Ban user <span id="ban-user-id-display" style="font-family: monospace;"></span>? They will be locked out of tournaments.
+        </p>
+        <div class="form-group">
+          <label class="form-label">Ban Reason *</label>
+          <textarea id="ban-user-reason" class="form-control" rows="3" placeholder="e.g. Caught cheating or using emulators..."></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" onclick="closeModal('modal-ban-user')">Cancel</button>
+        <button type="button" id="btn-confirm-ban-user" class="btn btn-danger">Confirm Ban</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Edit User Role -->
+  <div id="modal-edit-user-role" class="modal-overlay">
+    <div class="modal-card" style="max-width: 480px;">
+      <div class="modal-header">
+        <h3 class="modal-title">Edit User Account Role</h3>
+        <button class="modal-close" onclick="closeModal('modal-edit-user-role')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p style="font-size: 13px; margin-bottom: 12px;">
+          User ID: <span id="role-user-id-display" style="font-family: monospace;"></span>
+        </p>
+        <div class="form-group">
+          <label class="form-label">Select Role *</label>
+          <select id="select-user-role" class="form-control">
+            <option value="player">Player (Normal User)</option>
+            <option value="moderator">Moderator (Roster & Lobby Checker)</option>
+            <option value="admin">Administrator (Full Access)</option>
+          </select>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" onclick="closeModal('modal-edit-user-role')">Cancel</button>
+        <button type="button" id="btn-confirm-user-role" class="btn btn-primary">Save Role</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Account Deletion Requests -->
+  <div id="modal-deletion-requests" class="modal-overlay">
+    <div class="modal-card" style="max-width: 900px; width: 95%;">
+      <div class="modal-header">
+        <h3 class="modal-title">🗑️ Player Account Deletion Requests</h3>
+        <button class="modal-close" onclick="closeModal('modal-deletion-requests')">&times;</button>
+      </div>
+      <div class="modal-body" style="padding: 0;">
+        <div class="table-responsive">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>User / Name</th>
+                <th>UID</th>
+                <th>Reason</th>
+                <th>Balance</th>
+                <th>Requested At</th>
+                <th>Status</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="deletion-requests-tbody">
+              <tr><td colspan="7" class="loading-container"><div class="loading-spinner"></div>Loading account deletion requests...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" onclick="closeModal('modal-deletion-requests')">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Edit User Balance -->
+  <div id="modal-edit-user-balance" class="modal-overlay">
+    <div class="modal-card" style="max-width: 520px;">
+      <div class="modal-header">
+        <h3 class="modal-title">💰 Edit Gamer Wallet Balance</h3>
+        <button class="modal-close" onclick="closeModal('modal-edit-user-balance')">&times;</button>
+      </div>
+      <form id="form-edit-user-balance" onsubmit="handleConfirmEditUserBalance(event)">
+        <div class="modal-body">
+          <div class="panel-card" style="padding: 12px; margin-bottom: 14px; background: rgba(255,255,255,0.03); font-size: 13px;">
+            <div style="font-weight: 700; color: var(--primary);" id="balance-user-name-display">Player Name</div>
+            <div style="font-size: 11px; color: var(--text-muted); font-family: monospace;" id="balance-user-id-display">UID: --</div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-top: 10px; text-align: center;">
+              <div style="background: rgba(0,0,0,0.2); padding: 8px; border-radius: 6px;">
+                <div style="font-size: 10.5px; color: var(--text-muted);">Total Balance</div>
+                <div id="current-total-balance-display" style="font-weight: 700; color: var(--accent-green); font-size: 14px;">৳ 0</div>
+              </div>
+              <div style="background: rgba(0,0,0,0.2); padding: 8px; border-radius: 6px;">
+                <div style="font-size: 10.5px; color: var(--text-muted);">Deposit Bal</div>
+                <div id="current-deposit-balance-display" style="font-weight: 700; color: var(--text-primary); font-size: 14px;">৳ 0</div>
+              </div>
+              <div style="background: rgba(0,0,0,0.2); padding: 8px; border-radius: 6px;">
+                <div style="font-size: 10.5px; color: var(--text-muted);">Winning Bal</div>
+                <div id="current-winning-balance-display" style="font-weight: 700; color: var(--secondary); font-size: 14px;">৳ 0</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Edit Mode Selection -->
+          <div class="form-group" style="margin-bottom: 14px;">
+            <label class="form-label">Balance Update Method</label>
+            <div style="display: flex; gap: 16px;">
+              <label style="display: flex; align-items: center; gap: 6px; cursor: pointer; font-size: 13px;">
+                <input type="radio" name="balance-edit-mode" value="set_exact" checked onchange="toggleBalanceEditMode()">
+                <span>Set Exact Balance</span>
+              </label>
+              <label style="display: flex; align-items: center; gap: 6px; cursor: pointer; font-size: 13px;">
+                <input type="radio" name="balance-edit-mode" value="adjust_by_amount" onchange="toggleBalanceEditMode()">
+                <span>Quick Add / Deduct</span>
+              </label>
+            </div>
+          </div>
+
+          <!-- Section: Set Exact -->
+          <div id="section-balance-exact">
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">New Deposit Balance (৳) *</label>
+                <input type="number" id="input-new-deposit-bal" class="form-control" min="0" step="any" oninput="calculatePreviewTotal()">
+              </div>
+              <div class="form-group">
+                <label class="form-label">New Winning Balance (৳) *</label>
+                <input type="number" id="input-new-winning-bal" class="form-control" min="0" step="any" oninput="calculatePreviewTotal()">
+              </div>
+            </div>
+          </div>
+
+          <!-- Section: Adjust by Amount -->
+          <div id="section-balance-adjust" style="display: none;">
+            <div class="form-group">
+              <label class="form-label">Adjustment Action *</label>
+              <select id="select-adjust-action" class="form-control" onchange="calculatePreviewTotal()">
+                <option value="add_deposit">➕ Add to Deposit Balance</option>
+                <option value="deduct_deposit">➖ Deduct from Deposit Balance</option>
+                <option value="add_winning">➕ Add to Winning Balance</option>
+                <option value="deduct_winning">➖ Deduct from Winning Balance</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Adjustment Amount (৳) *</label>
+              <input type="number" id="input-adjust-amount" class="form-control" min="1" step="any" placeholder="e.g. 50" oninput="calculatePreviewTotal()">
+            </div>
+          </div>
+
+          <!-- Preview & Note -->
+          <div style="background: rgba(0, 230, 118, 0.08); border: 1px solid rgba(0, 230, 118, 0.25); border-radius: var(--radius-sm); padding: 10px 14px; margin-bottom: 14px; font-size: 13px;">
+            <span>Resulting Total Balance: </span>
+            <strong id="preview-new-total-balance" style="color: var(--accent-green); font-size: 15px;">৳ 0</strong>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Admin Reason / Audit Note *</label>
+            <input type="text" id="input-balance-note" class="form-control" placeholder="e.g. Manual deposit reconciliation / Tournament bonus" required>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="closeModal('modal-edit-user-balance')">Cancel</button>
+          <button type="submit" id="btn-save-user-balance" class="btn btn-primary">Save Balance Changes</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal: Delete User Confirmation -->
+  <div id="modal-delete-user" class="modal-overlay">
+    <div class="modal-card" style="max-width: 440px;">
+      <div class="modal-header">
+        <h3 class="modal-title" style="color: var(--accent-red);">🗑️ Permanently Delete User</h3>
+        <button class="modal-close" onclick="closeModal('modal-delete-user')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p style="font-size: 13px; color: var(--text-secondary); margin-bottom: 12px;">
+          Are you sure you want to permanently delete this user account? This will erase their profile and wallet record from the database.
+        </p>
+        <div class="panel-card" style="padding: 12px; background: rgba(255, 82, 82, 0.08); border: 1px solid rgba(255, 82, 82, 0.25); margin-bottom: 12px;">
+          <div style="font-weight: 700; color: var(--accent-red);" id="delete-user-name-display">User Name</div>
+          <div style="font-size: 11px; color: var(--text-muted); font-family: monospace; margin-top: 4px;" id="delete-user-id-display">UID: --</div>
+        </div>
+        <div style="font-size: 12px; color: var(--accent-orange);">
+          ⚠️ This action cannot be undone. Any active match registrations should be reviewed first.
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" onclick="closeModal('modal-delete-user')">Cancel</button>
+        <button type="button" id="btn-confirm-delete-user" class="btn btn-danger" onclick="handleConfirmDeleteUser()">Permanently Delete</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: User Stats & Financial Activity -->
+  <div id="modal-user-details" class="modal-overlay">
+    <div class="modal-card" style="max-width: 820px; max-height: 90vh; overflow-y: auto;">
+      <div class="modal-header">
+        <h3 class="modal-title">📊 Gamer Profile &amp; Financial History</h3>
+        <button class="modal-close" onclick="closeModal('modal-user-details')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <!-- User identity header -->
+        <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; background: rgba(255,255,255,0.03); border: 1px solid var(--border-color); border-radius: var(--radius-sm); margin-bottom: 16px; flex-wrap: wrap; gap: 10px;">
+          <div>
+            <div style="font-size: 16px; font-weight: 700; color: var(--text-primary);" id="detail-user-name">Player Name</div>
+            <div style="font-size: 12px; color: var(--text-secondary);" id="detail-user-email">email@example.com</div>
+            <div style="font-size: 11px; color: var(--text-muted); font-family: monospace;" id="detail-user-id">UID: --</div>
+          </div>
+          <div style="display: flex; gap: 8px; align-items: center;">
+            <span id="detail-user-role-badge" class="badge badge-open">PLAYER</span>
+            <span id="detail-user-status-badge" class="badge badge-live">ACTIVE</span>
+          </div>
+        </div>
+
+        <!-- Free fire and date stats -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px; margin-bottom: 16px;">
+          <div class="panel-card" style="padding: 10px;">
+            <div style="font-size: 11px; color: var(--text-muted);">Free Fire UID</div>
+            <div id="detail-user-ffuid" style="font-weight: 700; color: var(--secondary); font-family: monospace; font-size: 14px;">--</div>
+          </div>
+          <div class="panel-card" style="padding: 10px;">
+            <div style="font-size: 11px; color: var(--text-muted);">In-Game Name (IGN)</div>
+            <div id="detail-user-ffname" style="font-weight: 700; font-size: 14px;">--</div>
+          </div>
+          <div class="panel-card" style="padding: 10px;">
+            <div style="font-size: 11px; color: var(--text-muted);">Joined At</div>
+            <div id="detail-user-joined" style="font-size: 12.5px;">--</div>
+          </div>
+        </div>
+
+        <!-- Wallet and Financial KPI Grid -->
+        <div class="stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; margin-bottom: 16px;">
+          <div class="stat-card" style="padding: 10px;">
+            <div class="stat-label">Total Balance</div>
+            <div id="detail-stat-total-bal" class="stat-value" style="font-size: 16px; color: var(--accent-green);">৳ 0</div>
+          </div>
+          <div class="stat-card" style="padding: 10px;">
+            <div class="stat-label">Deposit Bal</div>
+            <div id="detail-stat-dep-bal" class="stat-value" style="font-size: 16px;">৳ 0</div>
+          </div>
+          <div class="stat-card" style="padding: 10px;">
+            <div class="stat-label">Winning Bal</div>
+            <div id="detail-stat-win-bal" class="stat-value" style="font-size: 16px; color: var(--secondary);">৳ 0</div>
+          </div>
+          <div class="stat-card" style="padding: 10px;">
+            <div class="stat-label">Deposits</div>
+            <div id="detail-stat-dep-count" class="stat-value" style="font-size: 16px;">0 times</div>
+            <div id="detail-stat-dep-amount" class="stat-meta">Approved: ৳ 0</div>
+          </div>
+          <div class="stat-card" style="padding: 10px;">
+            <div class="stat-label">Withdrawals</div>
+            <div id="detail-stat-with-count" class="stat-value" style="font-size: 16px;">0 times</div>
+            <div id="detail-stat-with-amount" class="stat-meta">Completed: ৳ 0</div>
+          </div>
+          <div class="stat-card" style="padding: 10px;">
+            <div class="stat-label">Matches</div>
+            <div id="detail-stat-matches-count" class="stat-value" style="font-size: 16px;">0</div>
+          </div>
+        </div>
+
+        <!-- Activity Tables -->
+        <h4 style="font-size: 13.5px; margin: 16px 0 8px; color: var(--text-primary);">💳 Deposit Requests History</h4>
+        <div class="table-responsive" style="max-height: 180px; overflow-y: auto; margin-bottom: 16px; border: 1px solid var(--border-color); border-radius: var(--radius-sm);">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Amount</th>
+                <th>Method</th>
+                <th>TrxID</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="detail-deposits-tbody">
+              <tr><td colspan="5" class="empty-state">No deposits recorded.</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h4 style="font-size: 13.5px; margin: 16px 0 8px; color: var(--text-primary);">💸 Withdrawal Requests History</h4>
+        <div class="table-responsive" style="max-height: 180px; overflow-y: auto; margin-bottom: 16px; border: 1px solid var(--border-color); border-radius: var(--radius-sm);">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Amount</th>
+                <th>Method</th>
+                <th>Receiver Number</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="detail-withdrawals-tbody">
+              <tr><td colspan="5" class="empty-state">No withdrawals recorded.</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h4 style="font-size: 13.5px; margin: 16px 0 8px; color: var(--text-primary);">🎮 Tournament Match Participations</h4>
+        <div class="table-responsive" style="max-height: 180px; overflow-y: auto; border: 1px solid var(--border-color); border-radius: var(--radius-sm);">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Tournament</th>
+                <th>Game Mode</th>
+                <th>Map</th>
+                <th>Slot</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="detail-matches-tbody">
+              <tr><td colspan="5" class="empty-state">No matches recorded.</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" onclick="closeModal('modal-user-details')">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Resolve Dispute -->
+  <div id="modal-resolve-report" class="modal-overlay">
+    <div class="modal-card" style="max-width: 480px;">
+      <div class="modal-header">
+        <h3 class="modal-title" style="color: var(--accent-green);">Resolve Dispute / Cheat Report</h3>
+        <button class="modal-close" onclick="closeModal('modal-resolve-report')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p style="font-size: 13px; margin-bottom: 12px;">
+          Report ID: <span id="resolve-report-id-display" style="font-family: monospace;"></span>
+        </p>
+        <div class="form-group">
+          <label class="form-label">Investigation Resolution Notes *</label>
+          <textarea id="resolve-report-notes" class="form-control" rows="3" placeholder="e.g. Player verified and intruder was kicked from lobby."></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" onclick="closeModal('modal-resolve-report')">Cancel</button>
+        <button type="button" id="btn-confirm-resolve-report" class="btn btn-success">Confirm Resolution</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Manual Refund -->
+  <div id="modal-manual-refund" class="modal-overlay">
+    <div class="modal-card" style="max-width: 480px;">
+      <div class="modal-header">
+        <h3 class="modal-title">💸 Issue Manual Refund</h3>
+        <button class="modal-close" onclick="closeModal('modal-manual-refund')">&times;</button>
+      </div>
+      <form id="form-manual-refund">
+        <div class="modal-body">
+          <div class="form-group">
+            <label class="form-label">User ID *</label>
+            <input type="text" id="refund-user-id" class="form-control" placeholder="Target User Firebase UID" required />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Tournament ID (Optional)</label>
+            <input type="text" id="refund-tourn-id" class="form-control" placeholder="Associated tournament ID" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Refund Amount (৳) *</label>
+            <input type="number" id="refund-amount" class="form-control" min="1" placeholder="e.g. 50" required />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Refund Reason *</label>
+            <input type="text" id="refund-reason" class="form-control" placeholder="e.g. Match cancelled / Room crash compensation" required />
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="closeModal('modal-manual-refund')">Cancel</button>
+          <button type="button" id="btn-confirm-manual-refund" class="btn btn-primary">Issue Refund</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- PHASE 10 Modal: Respond to Support Ticket -->
+  <div id="modal-respond-support-ticket" class="modal-overlay">
+    <div class="modal-card" style="max-width: 560px;">
+      <div class="modal-header">
+        <h3 class="modal-title">🎧 Respond to Support Case</h3>
+        <button class="modal-close" onclick="closeModal('modal-respond-support-ticket')">&times;</button>
+      </div>
+      <form id="form-respond-support-ticket" onsubmit="executeRespondSupportTicket(event)">
+        <input type="hidden" id="respond-ticket-id" />
+        <input type="hidden" id="respond-ticket-userid" />
+        <input type="hidden" id="respond-ticket-subject" />
+        <div class="modal-body">
+          <div class="panel-card" style="padding: 12px; margin-bottom: 14px; background: rgba(255,255,255,0.03); font-size: 13px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+              <div><strong>Player:</strong> <span id="respond-ticket-player">--</span></div>
+              <span id="respond-ticket-category-badge" class="badge badge-open">CATEGORY</span>
+            </div>
+            <div style="margin-bottom: 6px;"><strong>Subject:</strong> <span id="respond-ticket-subject-display">--</span></div>
+            <div style="margin-bottom: 6px;"><strong>Reference ID:</strong> <span id="respond-ticket-ref-display" style="font-family: monospace; color: var(--secondary);">N/A</span></div>
+            <div style="margin-top: 8px; padding: 10px; background: rgba(0,0,0,0.25); border-radius: 6px; font-size: 12.5px; line-height: 1.5; color: var(--text-primary); border: 1px solid var(--border-color);">
+              <span id="respond-ticket-desc-display">--</span>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Case Status</label>
+            <select id="respond-ticket-status" class="form-control" required>
+              <option value="RESOLVED">RESOLVED (Issue Solved)</option>
+              <option value="IN_REVIEW">IN_REVIEW (Under Investigation)</option>
+              <option value="CLOSED">CLOSED (Case Closed)</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Administrator Response / Resolution Note *</label>
+            <textarea id="respond-ticket-reply" class="form-control" rows="4" required placeholder="Type your response to the player. This will appear in their support inbox and push notifications..."></textarea>
+          </div>
+
+          <div class="form-group" style="display: flex; align-items: center; gap: 8px;">
+            <input type="checkbox" id="respond-ticket-notify" checked style="accent-color: var(--primary);" />
+            <label for="respond-ticket-notify" style="font-size: 12.5px; color: var(--text-secondary); cursor: pointer;">
+              Dispatch instant push notification to player's app inbox
+            </label>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="closeModal('modal-respond-support-ticket')">Cancel</button>
+          <button type="submit" id="btn-confirm-respond-ticket" class="btn btn-success">Save Resolution &amp; Respond</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- PHASE 10 Modal: Send Custom Notification & Push Broadcaster -->
+  <div id="modal-send-notification" class="modal-overlay">
+    <div class="modal-card" style="max-width: 520px;">
+      <div class="modal-header">
+        <h3 class="modal-title">📢 Dispatch Push &amp; In-App Notification</h3>
+        <button class="modal-close" onclick="closeModal('modal-send-notification')">&times;</button>
+      </div>
+      <form id="form-send-notification" onsubmit="executeSendCustomNotification(event)">
+        <input type="hidden" id="notify-target-mode" value="CUSTOM" />
+        <input type="hidden" id="notify-target-uids" value="" />
+        <div class="modal-body">
+          <div id="notify-recipient-summary" style="padding: 10px 14px; background: rgba(255, 94, 0, 0.08); border: 1px solid rgba(255, 94, 0, 0.25); border-radius: var(--radius-sm); margin-bottom: 14px; font-size: 13px; font-weight: 500; color: var(--secondary);">
+            🌐 Recipient: <strong>All Registered Players (Broadcast)</strong>
+          </div>
+
+          <div class="form-group" id="notify-target-uid-group" style="display: none;">
+            <label class="form-label">Recipient User ID</label>
+            <input type="text" id="notify-target-uid" class="form-control" placeholder="Target User Firebase UID or 'ALL_USERS'" />
+            <small style="color: var(--text-muted); font-size: 11px;">Enter specific player UID, or ALL_USERS to broadcast.</small>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Notification Type / Category *</label>
+            <select id="notify-type" class="form-control">
+              <option value="ROOM_AVAILABLE">🔑 Room Information &amp; Password Ready</option>
+              <option value="MATCH_SCHEDULE_UPDATE">⏰ Match Schedule Update</option>
+              <option value="TOURNAMENT_REGISTRATION">🏆 Tournament Announcement</option>
+              <option value="ACCOUNT_SECURITY">📢 General &amp; Security Announcement</option>
+              <option value="REWARD_CREDIT">💰 Reward &amp; Prize Alert</option>
+              <option value="DEPOSIT_STATUS">💳 Deposit Verification Notice</option>
+              <option value="WITHDRAWAL_STATUS">💸 Withdrawal Notice</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Notification Title *</label>
+            <input type="text" id="notify-title" class="form-control" placeholder="e.g. Room ID &amp; Password Ready!" required />
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Notification Message *</label>
+            <textarea id="notify-message" class="form-control" rows="3" placeholder="Enter message text. Sensitive secrets (PINs/passwords) are forbidden." required></textarea>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">🖼️ Notification Banner Image URL (Optional)</label>
+            <input type="url" id="notify-image-url" class="form-control" placeholder="https://... (Direct image link for rich push banner, e.g. .jpg/.png)" oninput="handleNotifyImagePreview(this.value)" />
+            <div id="notify-image-preview-container" style="display: none; margin-top: 8px; border-radius: var(--radius-sm); overflow: hidden; max-height: 140px; border: 1px solid var(--border-color); background: rgba(0,0,0,0.2); text-align: center;">
+              <img id="notify-image-preview" src="" alt="Banner Preview" style="max-height: 140px; width: auto; max-width: 100%; object-fit: contain;" />
+            </div>
+          </div>
+
+          <div style="background: rgba(255, 255, 255, 0.04); border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 12px; margin-top: 12px;">
+            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 13px; font-weight: 600;">
+              <input type="checkbox" id="notify-include-fcm" checked style="accent-color: var(--primary);" />
+              <span>Send Instant Mobile Push Notification (FCM Alert)</span>
+            </label>
+            <div style="font-size: 11.5px; color: var(--text-muted); margin-top: 4px; margin-left: 22px;">
+              Pushes a high-priority alert directly to the player's Android phone lock screen &amp; system notification bar.
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="closeModal('modal-send-notification')">Cancel</button>
+          <button type="submit" id="btn-confirm-send-notify" class="btn btn-primary">Dispatch Notification</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal: Configure Payment Settings (bKash & Nagad) -->
+  <div id="modal-configure-payments" class="modal-overlay">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 class="modal-title">⚙️ Configure Payment Methods &amp; Instructions</h3>
+        <button class="modal-close" onclick="closeModal('modal-configure-payments')">&times;</button>
+      </div>
+      <form id="form-configure-payments">
+        <div class="modal-body">
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">bKash Account Number *</label>
+              <input type="text" id="cfg-bkash-number" class="form-control" placeholder="017XXXXXXXX (Personal)" required />
+            </div>
+            <div class="form-group">
+              <label class="form-label">Nagad Account Number *</label>
+              <input type="text" id="cfg-nagad-number" class="form-control" placeholder="018XXXXXXXX (Personal)" required />
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Minimum Deposit (৳)</label>
+              <input type="number" id="cfg-min-deposit" class="form-control" value="50" min="10" />
+            </div>
+            <div class="form-group">
+              <label class="form-label">Maximum Deposit (৳)</label>
+              <input type="number" id="cfg-max-deposit" class="form-control" value="25000" min="100" />
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Minimum Withdrawal (৳) *</label>
+              <input type="number" id="cfg-min-withdrawal" class="form-control" value="100" min="10" />
+            </div>
+            <div class="form-group">
+              <label class="form-label">Maximum Withdrawal (৳)</label>
+              <input type="number" id="cfg-max-withdrawal" class="form-control" value="10000" min="50" />
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">bKash Payment Instructions</label>
+            <textarea id="cfg-bkash-instructions" class="form-control" rows="3"></textarea>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Nagad Payment Instructions</label>
+            <textarea id="cfg-nagad-instructions" class="form-control" rows="3"></textarea>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Test Mode Notice</label>
+            <input type="text" id="cfg-test-notice" class="form-control" value="TEST TRANSACTIONS ONLY: No real money is charged during testing." />
+          </div>
+
+          <div class="form-group">
+            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 13px;">
+              <input type="checkbox" id="cfg-test-mode" checked />
+              <span>Keep Test Mode Active (Real money disabled)</span>
+            </label>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="closeModal('modal-configure-payments')">Cancel</button>
+          <button type="submit" id="btn-save-payment-settings" class="btn btn-primary">Save Settings &amp; Log Audit</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal: Ledger Reconciliation -->
+  <div id="modal-ledger-reconcile" class="modal-overlay">
+    <div class="modal-card" style="max-width: 580px;">
+      <div class="modal-header">
+        <h3 class="modal-title">⚖️ Server Ledger Reconciliation</h3>
+        <button class="modal-close" onclick="closeModal('modal-ledger-reconcile')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p style="font-size: 13px; color: var(--text-secondary); margin-bottom: 14px;">
+          Audits every immutable ledger transaction against the wallet balance snapshot using integer mathematical integrity.
+        </p>
+        <div class="form-group">
+          <label class="form-label">Target Player User ID (or Leave Blank for Current Admin Account)</label>
+          <div style="display: flex; gap: 8px;">
+            <input type="text" id="reconcile-user-id" class="form-control" placeholder="Enter User ID (e.g. CVAqBuz...)" />
+            <button type="button" class="btn btn-primary" onclick="handleRunReconcile()">Execute Audit</button>
+          </div>
+        </div>
+
+        <div id="reconcile-result-card" style="display: none; margin-top: 16px; padding: 14px; background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: 8px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+            <span style="font-weight: bold; font-size: 14px;">Audit Outcome:</span>
+            <span id="reconcile-badge" class="badge">PENDING</span>
+          </div>
+          <div style="font-size: 12.5px; line-height: 1.8; color: var(--text-primary);">
+            <div><strong>Wallet Snapshot:</strong> <span id="rec-snap-bal">৳ 0</span></div>
+            <div><strong>Computed Ledger Sum:</strong> <span id="rec-comp-bal">৳ 0</span></div>
+            <div><strong>Total Credits:</strong> <span id="rec-credits" style="color: var(--accent-green);">+৳ 0</span></div>
+            <div><strong>Total Debits:</strong> <span id="rec-debits" style="color: var(--accent-red);">-৳ 0</span></div>
+            <div><strong>Variance:</strong> <span id="rec-variance">৳ 0.00</span></div>
+            <div><strong>Audited Transactions Count:</strong> <span id="rec-count">0</span></div>
+            <div><strong>Idempotency Check:</strong> <span id="rec-idemp">✅ Zero duplicate keys</span></div>
+            <div><strong>Non-Negative Running Balance:</strong> <span id="rec-running">✅ Maintained</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" onclick="closeModal('modal-ledger-reconcile')">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Audit Details Inspection -->
+  <div id="modal-audit-details" class="modal-overlay">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 class="modal-title">📋 Audit Log Inspection</h3>
+        <button class="modal-close" onclick="closeModal('modal-audit-details')">&times;</button>
+      </div>
+      <div class="modal-body" id="audit-modal-content">
+        <!-- Injected via JavaScript -->
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" onclick="closeModal('modal-audit-details')">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- PHASE 9 Modal: Approve Match Result Submission -->
+  <div id="modal-approve-submission" class="modal-overlay">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 class="modal-title">🏆 Verify Kills &amp; Credit Reward</h3>
+        <button class="modal-close" onclick="closeModal('modal-approve-submission')">&times;</button>
+      </div>
+      <form id="form-approve-submission" onsubmit="executeApproveSubmission(event)">
+        <input type="hidden" id="approve-sub-id" />
+        <div class="modal-body">
+          <div class="panel-card" style="padding: 12px; margin-bottom: 16px; font-size: 13px; background: rgba(255,255,255,0.03);">
+            <div><strong>Player:</strong> <span id="approve-sub-player">--</span></div>
+            <div><strong>Tournament:</strong> <span id="approve-sub-tournament">--</span></div>
+            <div><strong>Claimed:</strong> <span id="approve-sub-claimed">--</span></div>
+            <div><strong>Configured Kill Rate:</strong> ৳10.00 / kill</div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Verified Kills (0 - 48)</label>
+              <input type="number" id="approve-sub-kills" class="form-control" min="0" max="48" required oninput="calculateSubRewardPreview()" />
+            </div>
+            <div class="form-group">
+              <label class="form-label">Verified Rank (#)</label>
+              <input type="number" id="approve-sub-rank" class="form-control" min="1" max="48" required />
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Rank Prize Pool Amount (৳ Optional)</label>
+            <input type="number" id="approve-sub-rankprize" class="form-control" min="0" value="0" oninput="calculateSubRewardPreview()" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Moderator Audit Note</label>
+            <input type="text" id="approve-sub-note" class="form-control" placeholder="Verified from post-match scoreboard screenshot." />
+          </div>
+          <div style="padding: 14px; background: rgba(34, 197, 94, 0.1); border: 1px solid rgba(34, 197, 94, 0.3); border-radius: 8px; margin-top: 10px;">
+            <div style="font-size: 12px; color: var(--text-secondary);">Calculated Server Credit:</div>
+            <div id="approve-sub-calc-preview" style="font-size: 18px; font-weight: bold; color: var(--accent-green); margin-top: 4px;">
+              ৳0.00 (0 kills × ৳10 + ৳0)
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="closeModal('modal-approve-submission')">Cancel</button>
+          <button type="submit" id="btn-confirm-approve-sub" class="btn btn-success">Confirm &amp; Credit Wallet</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- PHASE 9 Modal: Reject Match Result Submission -->
+  <div id="modal-reject-submission" class="modal-overlay">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 class="modal-title">❌ Reject Match Claim</h3>
+        <button class="modal-close" onclick="closeModal('modal-reject-submission')">&times;</button>
+      </div>
+      <form id="form-reject-submission" onsubmit="executeRejectSubmission(event)">
+        <input type="hidden" id="reject-sub-id" />
+        <div class="modal-body">
+          <div class="panel-card" style="padding: 12px; margin-bottom: 16px; font-size: 13px; background: rgba(255,255,255,0.03);">
+            <div><strong>Player:</strong> <span id="reject-sub-player">--</span></div>
+            <div><strong>Tournament:</strong> <span id="reject-sub-tournament">--</span></div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Reason for Rejection (Required)</label>
+            <select id="reject-sub-reason-preset" class="form-control" style="margin-bottom: 8px;" onchange="setRejectReasonPreset()">
+              <option value="">-- Choose Common Reason --</option>
+              <option value="Screenshot does not match lobby UID or room ID.">Screenshot does not match lobby UID or room ID.</option>
+              <option value="Claimed kill count does not match final match scoreboard.">Claimed kill count does not match final match scoreboard.</option>
+              <option value="No valid screenshot or evidence provided.">No valid screenshot or evidence provided.</option>
+              <option value="Suspected teaming / unfair gameplay violation.">Suspected teaming / unfair gameplay violation.</option>
+            </select>
+            <textarea id="reject-sub-reason" class="form-control" rows="3" required placeholder="Specify why this match claim cannot be approved..."></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="closeModal('modal-reject-submission')">Cancel</button>
+          <button type="submit" id="btn-confirm-reject-sub" class="btn btn-danger">Confirm Rejection</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal: Bulk Delete Deposit Requests -->
+  <div id="modal-bulk-delete-deposits" class="modal-overlay">
+    <div class="modal-card" style="max-width: 440px;">
+      <div class="modal-header">
+        <h3 class="modal-title" style="color: var(--accent-red);">🗑️ Delete Selected Deposits</h3>
+        <button class="modal-close" onclick="closeModal('modal-bulk-delete-deposits')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p style="font-size: 13px; color: var(--text-secondary); margin-bottom: 12px;">
+          Are you sure you want to permanently delete <strong id="bulk-delete-deposits-count" style="color: var(--accent-red);">0</strong> selected deposit request(s)?
+        </p>
+        <div style="font-size: 12px; color: var(--accent-orange);">
+          ⚠️ This action cannot be undone. Existing player wallet balances and transaction ledgers will remain intact.
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" onclick="closeModal('modal-bulk-delete-deposits')">Cancel</button>
+        <button type="button" id="btn-confirm-bulk-delete-deposits" class="btn btn-danger" onclick="handleConfirmBulkDeleteDeposits()">Permanently Delete</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Bulk Delete Withdrawal Requests -->
+  <div id="modal-bulk-delete-withdrawals" class="modal-overlay">
+    <div class="modal-card" style="max-width: 440px;">
+      <div class="modal-header">
+        <h3 class="modal-title" style="color: var(--accent-red);">🗑️ Delete Selected Withdrawals</h3>
+        <button class="modal-close" onclick="closeModal('modal-bulk-delete-withdrawals')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p style="font-size: 13px; color: var(--text-secondary); margin-bottom: 12px;">
+          Are you sure you want to permanently delete <strong id="bulk-delete-withdrawals-count" style="color: var(--accent-red);">0</strong> selected withdrawal request(s)?
+        </p>
+        <div style="font-size: 12px; color: var(--accent-orange);">
+          ⚠️ Any selected PENDING requests will automatically release reserved funds back to the player's wallet before deletion.
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" onclick="closeModal('modal-bulk-delete-withdrawals')">Cancel</button>
+        <button type="button" id="btn-confirm-bulk-delete-withdrawals" class="btn btn-danger" onclick="handleConfirmBulkDeleteWithdrawals()">Permanently Delete</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Bulk Delete Support Cases -->
+  <div id="modal-bulk-delete-support" class="modal-overlay">
+    <div class="modal-card" style="max-width: 440px;">
+      <div class="modal-header">
+        <h3 class="modal-title" style="color: var(--accent-red);">🗑️ Delete Selected Support Cases</h3>
+        <button class="modal-close" onclick="closeModal('modal-bulk-delete-support')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p style="font-size: 13px; color: var(--text-secondary); margin-bottom: 12px;">
+          Are you sure you want to permanently delete <strong id="bulk-delete-support-count" style="color: var(--accent-red);">0</strong> selected support case(s)?
+        </p>
+        <div style="font-size: 12px; color: var(--accent-orange);">
+          ⚠️ This action cannot be undone.
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" onclick="closeModal('modal-bulk-delete-support')">Cancel</button>
+        <button type="button" id="btn-confirm-bulk-delete-support" class="btn btn-danger" onclick="handleConfirmBulkDeleteSupportTickets()">Permanently Delete</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Bulk Delete Disputes & Reports -->
+  <div id="modal-bulk-delete-disputes" class="modal-overlay">
+    <div class="modal-card" style="max-width: 440px;">
+      <div class="modal-header">
+        <h3 class="modal-title" style="color: var(--accent-red);">🗑️ Delete Selected Reports</h3>
+        <button class="modal-close" onclick="closeModal('modal-bulk-delete-disputes')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p style="font-size: 13px; color: var(--text-secondary); margin-bottom: 12px;">
+          Are you sure you want to permanently delete <strong id="bulk-delete-disputes-count" style="color: var(--accent-red);">0</strong> selected intruder / anti-cheat report(s)?
+        </p>
+        <div style="font-size: 12px; color: var(--accent-orange);">
+          ⚠️ This action cannot be undone.
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" onclick="closeModal('modal-bulk-delete-disputes')">Cancel</button>
+        <button type="button" id="btn-confirm-bulk-delete-disputes" class="btn btn-danger" onclick="handleConfirmBulkDeleteDisputes()">Permanently Delete</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Firebase Compat SDK -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-functions-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-storage-compat.js"></script>
+  
+  <!-- Web Admin App Scripts (with cache-busting version) -->
+  <script src="js/firebase-config.js?v=20261102_fix"></script>
+  <script src="js/auth.js?v=20261110_mobile"></script>
+  <script src="js/dashboard.js?v=20261102_fix"></script>
+  <script src="js/tournaments.js?v=20261102_fix"></script>
+  <script src="js/players.js?v=20261110_notify"></script>
+  <script src="js/room-manager.js?v=20261102_fix"></script>
+  <script src="js/match-results.js?v=20261102_fix"></script>
+  <script src="js/finance.js?v=20261112_fix"></script>
+  <script src="js/users.js?v=20261102_fix"></script>
+  <script src="js/disputes.js?v=20261112_fix"></script>
+  <script src="js/audit-logs.js?v=20261102_fix"></script>
+  <script src="js/app-updates.js?v=20261110_fix"></script>
+
+</body>
+</html>
+
